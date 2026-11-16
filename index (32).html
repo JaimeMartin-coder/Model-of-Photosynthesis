@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Photosynthesis Zoom Lab</title>
+<style>
+*,*::before,*::after{box-sizing:border-box}
+:root{--bg:#ffffff;--fg:#1c2733;--muted:#4b5a6a;--line:#c3cdd8;--card:#ffffff;--soft:#eef3f9;--accent:#0b5cab;--accentfg:#ffffff;--warn:#b45309;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--bg:#14181d;--fg:#e8edf2;--muted:#aab6c3;--line:#38444f;--card:#1b2128;--soft:#232c36;--accent:#6bb0ff;--accentfg:#0b1a2b;--warn:#f0a35a}
+}
+:root[data-theme="dark"]{--bg:#14181d;--fg:#e8edf2;--muted:#aab6c3;--line:#38444f;--card:#1b2128;--soft:#232c36;--accent:#6bb0ff;--accentfg:#0b1a2b;--warn:#f0a35a}
+:root[data-tint="cream"]{--bg:#fbf5e6;--fg:#1d1d1d;--muted:#444;--line:#d4c8a4;--card:#fffaf0;--soft:#f3ead2;--accent:#0b5cab;--accentfg:#fff;--warn:#b45309}
+:root[data-tint="blue"]{--bg:#e8f1fb;--fg:#1d1d1d;--muted:#444;--line:#b7c9de;--card:#f5f9fe;--soft:#dbe8f6;--accent:#0b5cab;--accentfg:#fff;--warn:#b45309}
+:root[data-tint="mint"]{--bg:#e6f5ec;--fg:#1d1d1d;--muted:#444;--line:#b4d3c0;--card:#f4fbf7;--soft:#d6ecde;--accent:#0b5cab;--accentfg:#fff;--warn:#b45309}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font:1rem/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+:root[data-dys="1"] body{font-family:Verdana,Tahoma,"Trebuchet MS",sans-serif;letter-spacing:.05em;word-spacing:.16em;line-height:1.75;text-align:left}
+:root[data-dys="1"] svg text{letter-spacing:0;word-spacing:0}
+
+.btn{font:inherit;font-size:.95rem;border:2px solid var(--line);background:var(--card);color:var(--fg);border-radius:8px;padding:.4rem .85rem;cursor:pointer;min-height:44px}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accentfg);border-color:var(--accent);font-weight:700}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn:focus-visible,.hot:focus-visible,#lens:focus-visible,.term:focus-visible,summary:focus-visible{outline:3px solid var(--warn);outline-offset:2px}
+
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line)}
+.crumbs{flex:1 1 240px;display:flex;flex-wrap:wrap;gap:4px;align-items:center;font-size:.95rem}
+.crumbs button{font:inherit;background:none;border:none;color:var(--accent);text-decoration:underline;cursor:pointer;padding:6px 4px}
+.crumbs .sep{color:var(--muted)}
+.crumbs .here{font-weight:700;padding:6px 4px}
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tools label{display:flex;align-items:center;gap:6px;font-size:.9rem}
+.titleRow{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 14px 6px;max-width:1300px;margin:0 auto}
+h1{font-size:1.3rem;margin:0}
+.badge{border:2px solid var(--line);border-radius:999px;padding:2px 12px;font-size:.88rem;background:var(--soft)}
+.layout{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(290px,1fr);gap:14px;padding:6px 14px 24px;max-width:1300px;margin:0 auto;align-items:start}
+@media (max-width:880px){.layout{grid-template-columns:1fr}}
+
+.stage{background:#fff;border:2px solid var(--line);border-radius:12px;overflow:hidden}
+.stage svg{display:block;width:100%;height:auto;max-height:calc(100vh - 240px);min-height:260px}
+.stageBar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-top:8px;padding:8px 12px;border:2px solid var(--line);border-radius:10px;background:var(--soft);min-height:56px}
+.stageBar .msg{flex:1 1 260px}
+@keyframes zin{from{transform:scale(.45);opacity:0}to{transform:none;opacity:1}}
+@keyframes zout{from{transform:scale(1.7);opacity:0}to{transform:none;opacity:1}}
+.stage.zin{animation:zin .55s ease-out}
+.stage.zout{animation:zout .45s ease-out}
+@keyframes pulse{0%,100%{opacity:.15}50%{opacity:1}}
+.pulse{animation:pulse 1.5s ease-in-out infinite;pointer-events:none}
+@keyframes dashmove{to{stroke-dashoffset:-28}}
+.flowdash{stroke-dasharray:8 6;animation:dashmove 1s linear infinite;pointer-events:none}
+body.paused .flowdash,body.paused .pulse{animation-play-state:paused}
+@media (prefers-reduced-motion:reduce){.stage.zin,.stage.zout{animation:none}}
+
+svg .lbl{font:600 13px Verdana,Tahoma,Arial,sans-serif;fill:#111;paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round;letter-spacing:0}
+svg .lbl.s{font-size:11px}
+svg .lbl.b{font-size:15px}
+svg .lbl.m{font-size:13px}
+svg text{font-family:Verdana,Tahoma,Arial,sans-serif}
+svg .hot{cursor:pointer}
+svg .hot:hover{filter:drop-shadow(0 0 4px #d97706)}
+svg .guide,svg #particles,svg .chip{pointer-events:none}
+svg .zone{fill:none;stroke:#777;stroke-width:2;stroke-dasharray:7 5;opacity:.7;pointer-events:none}
+svg .zone.on{stroke:#d97706;stroke-width:4.5;stroke-dasharray:none;opacity:1}
+
+.side{display:flex;flex-direction:column;gap:12px}
+.card{border:2px solid var(--line);border-radius:12px;background:var(--card);padding:12px 14px}
+.card h2{font-size:1.05rem;margin:0 0 6px}
+.card p{margin:.4rem 0}
+.card summary{cursor:pointer;font-weight:700}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.grp{margin:8px 0}
+.tag{display:block;font-size:.85rem;font-weight:700;color:var(--muted);margin-bottom:4px}
+.flowBtn{display:inline-flex;align-items:center;gap:8px;margin:0 6px 6px 0;text-align:left}
+.flowBtn[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 2px var(--accent);font-weight:700}
+.sw{display:inline-block;width:22px;height:14px;border-radius:7px;border:2px solid}
+.eq{font-weight:700;background:var(--soft);border-radius:8px;padding:8px 10px;margin:10px 0}
+.steps{display:flex;gap:6px;flex-wrap:wrap}
+.steps .btn{min-width:44px;padding:.3rem .6rem}
+.steps .btn[aria-pressed="true"]{background:var(--accent);color:var(--accentfg);border-color:var(--accent);font-weight:700}
+.term{font:inherit;background:none;border:none;border-bottom:2px dotted var(--accent);color:inherit;padding:0;cursor:help}
+
+.defbox{position:fixed;left:12px;right:12px;bottom:calc(215px + env(safe-area-inset-bottom,0px));max-width:560px;margin:0 auto;background:var(--card);color:var(--fg);border:2px solid var(--accent);border-radius:12px;padding:12px 14px;z-index:20;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+dialog{background:var(--card);color:var(--fg);border:2px solid var(--line);border-radius:12px;max-width:600px;width:calc(100% - 28px);padding:16px 18px}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+dialog h2{margin-top:0}
+dialog .opt{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+dialog select{font:inherit;padding:6px;border-radius:6px;min-height:40px}
+.note h3{margin:14px 0 4px;font-size:1rem}
+.note ul{margin:4px 0;padding-left:20px}
+
+/* adventure picker and themes */
+.start{max-width:1000px;margin:0 auto;padding:18px 14px 30px}
+.start h1{font-size:1.6rem;margin:6px 0}
+.start .sub{font-size:1.05rem;margin:0 0 16px;color:var(--muted)}
+.picks{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:760px){.picks{grid-template-columns:1fr}}
+.pick{border:4px solid var(--line);border-radius:16px;padding:16px 18px;background:var(--card);display:flex;flex-direction:column;gap:8px}
+.pick h2{margin:0;font-size:1.25rem}
+.pick p{margin:0}
+.pick svg{width:100%;max-width:260px;height:auto;align-self:center;background:#fff;border-radius:10px;border:2px solid var(--line)}
+.pick.bus{border-color:#9a5b00}.pick.bus h2{color:#9a5b00}
+.pick.quest{border-color:#5b2a86}.pick.quest h2{color:#5b2a86}
+.pick.bus .btn.primary{background:#9a5b00;border-color:#9a5b00;color:#fff}
+.pick.quest .btn.primary{background:#5b2a86;border-color:#5b2a86;color:#fff}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .pick.bus,:root:not([data-theme="light"]) .pick.bus h2{border-color:#f0b04a;color:#f0b04a}
+  :root:not([data-theme="light"]) .pick.quest,:root:not([data-theme="light"]) .pick.quest h2{border-color:#c9a2f2;color:#c9a2f2}
+}
+:root[data-adv="bus"]{--accent:#9a5b00;--accentfg:#fff}
+:root[data-adv="quest"]{--accent:#5b2a86;--accentfg:#fff}
+@media (prefers-color-scheme: dark){
+  :root[data-adv="bus"]:not([data-theme="light"]){--accent:#f0b04a;--accentfg:#2a1a00}
+  :root[data-adv="quest"]:not([data-theme="light"]){--accent:#c9a2f2;--accentfg:#22103a}
+}
+.story{border-color:var(--accent)}
+.story h2{color:var(--accent)}
+.advTag{border:2px solid var(--accent);color:var(--accent);border-radius:999px;padding:2px 12px;font-size:.85rem;font-weight:700}
+
+/* help and guided steps */
+.helpFab{position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:15;box-shadow:0 4px 16px rgba(0,0,0,.3);font-weight:700}
+body{padding-bottom:230px}
+.stepsCard{border-color:var(--accent)}
+.stepsCard h2{color:var(--accent)}
+.stepList{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.stepList li{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:10px;border:2px solid transparent}
+.stepList li .mk{flex:0 0 1.4em;text-align:center;font-weight:700}
+.stepList li.done{color:var(--muted)}
+.stepList li.cur{background:var(--soft);border-color:var(--accent)}
+.stepList .where{font-size:.9rem;color:var(--muted);margin:2px 0 6px}
+.stepList .row{margin-top:6px}
+.helpStep{font-size:1.15rem;margin:0 0 8px}
+.btn.helpTarget,.flowBtn.helpTarget{outline:5px solid #d97706;outline-offset:3px}
+svg .helpTarget{filter:drop-shadow(0 0 5px #d97706) drop-shadow(0 0 9px #d97706)}
+
+/* step-by-step guide bar */
+.guide{position:fixed;left:0;right:0;bottom:0;z-index:18;background:var(--card);color:var(--fg);border-top:5px solid var(--accent);padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px));display:flex;gap:14px;flex-wrap:wrap;align-items:center;box-shadow:0 -6px 20px rgba(0,0,0,.25)}
+.guideMain{flex:1 1 380px;min-width:240px}
+.guideTag{font-size:.85rem;color:var(--accent);font-weight:700}
+.guideText{font-size:1.15rem;line-height:1.4;margin:2px 0}
+.guideHint{font-size:.98rem;color:var(--fg);background:var(--soft);border-radius:8px;padding:6px 10px;margin-top:4px}
+.guideWarn{font-size:.95rem;margin-top:6px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.guideBtns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.linkBtn{font:inherit;background:none;border:none;color:var(--muted);text-decoration:underline;cursor:pointer;padding:8px 4px;font-size:.9rem}
+.spotRing{position:absolute;border:5px solid #d97706;border-radius:14px;pointer-events:none;z-index:30;animation:spotPulse 1.1s ease-in-out infinite}
+@keyframes spotPulse{0%,100%{box-shadow:0 0 0 2px rgba(217,119,6,.7)}50%{box-shadow:0 0 0 14px rgba(217,119,6,.15)}}
+.spotTip{position:absolute;transform:translateX(-50%);background:#d97706;color:#fff;font-weight:700;padding:6px 16px;border-radius:999px;z-index:31;pointer-events:none;white-space:nowrap;font-size:1.05rem}
+@media (prefers-reduced-motion:reduce){.spotRing{animation:none}}
+
+/* worksheet questions */
+.qScreen{max-width:1200px;margin:0 auto;padding:12px 14px 20px}
+.qWrap{display:grid;grid-template-columns:1.1fr 1fr;gap:20px;align-items:start}
+.qWrap.noimg{grid-template-columns:minmax(0,760px);justify-content:center}
+@media (max-width:860px){.qWrap{grid-template-columns:1fr}}
+.qImg{background:#fff;border:2px solid var(--line);border-radius:12px;padding:8px}
+.qImg svg{display:block;width:100%;height:auto}
+.qCap{font-size:.85rem;color:#444;text-align:center;margin-top:4px}
+.qTag{font-size:.95rem;color:var(--accent);font-weight:700}
+.qText{font-size:1.4rem;line-height:1.35;margin:6px 0 16px;font-weight:600}
+.qOpt{display:flex;gap:14px;align-items:center;width:100%;text-align:left;font-size:1.2rem;min-height:58px;margin:0 0 10px;padding:8px 14px}
+.qOpt .ql{flex:0 0 2em;height:2em;border:2px solid currentColor;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700}
+.qOpt.right{background:#d9f2df;color:#111;border-color:#1a7f37}
+.qOpt.wrong{background:#fde2e2;color:#111;border-color:#b42318;opacity:.85}
+.qFeed{font-size:1.15rem;min-height:3.2em;margin-top:6px}
+.qFeed .good{color:#1a7f37;font-weight:700}
+:root[data-theme="dark"] .qFeed .good{color:#6fdc8c}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .qFeed .good{color:#6fdc8c}}
+.qFeed .bad{font-weight:700}
+
+/* split screen on question screens */
+.qPanels{display:grid;grid-template-columns:1.3fr 1fr;gap:14px;align-items:start;margin-bottom:12px}
+.qPanels.noimg{grid-template-columns:minmax(0,480px);justify-content:center}
+@media (max-width:860px){.qPanels{grid-template-columns:1fr}}
+.qImg svg{max-height:36vh}
+.qLive{border:2px solid var(--line);border-radius:12px;padding:8px;background:#fff}
+.qLive .qCap{font-size:.85rem;color:#444;text-align:center;margin:0 0 4px;font-weight:700}
+.qLive .stage{border:none}
+.qLive .stage svg{max-height:36vh;min-height:170px}
+.qOpts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:760px){.qOpts{grid-template-columns:1fr}}
+.qOpts .qOpt{margin:0}
+
+/* explore while answering */
+.qLiveHead{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:space-between;margin-bottom:6px}
+.qLiveHead .qCap{margin:0;text-align:left;flex:1 1 200px}
+.qNav{display:flex;gap:6px;flex-wrap:wrap}
+.qNav .btn{min-height:38px;padding:.2rem .7rem;font-size:.9rem}
+.qLive .stageBar{margin-top:6px;min-height:0;padding:6px 10px;font-size:.95rem;background:var(--soft);color:var(--fg)}
+.qBottom{display:grid;grid-template-columns:1.2fr 1fr;gap:16px;align-items:start}
+@media (max-width:860px){.qBottom{grid-template-columns:1fr}}
+#qSideHost .story,#qSideHost details{display:none}
+#qSideHost .side{gap:10px}
+.guideHint ol{margin:4px 0 6px 1.2em;padding:0}
+
+/* step lock */
+body.lockUI #side .btn:not(.allow),body.lockUI #stageBar .btn:not(.allow),body.lockUI #backBtn:not(.allow),body.lockUI #crumbs,body.lockUI .tools label,body.lockUI #side .eq{display:none!important}
+body.lockUI #side .term{border-bottom:none;cursor:default;pointer-events:none}
+body.lockUI svg .hot:not(.allow){cursor:default;filter:none}
+body.lockUI:not(.showPulse) svg .pulse{display:none}
+.guideLock{font-size:.92rem;color:var(--muted);margin-top:4px}
+.guide.nudge{animation:nudgeShake .45s}
+@keyframes nudgeShake{0%,100%{transform:none}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+@media (prefers-reduced-motion:reduce){.guide.nudge{animation:none;outline:4px solid #d97706}}
+.qImg .bl.hi line{stroke:#d97706;stroke-width:7}
+.qImg .bl.hi rect{fill:#d97706;stroke:#7a3a00}
+.qImg .bl.hi text{fill:#fff}
+
+/* no zoom unless the question needs it */
+body.qMode svg .pulse{display:none}
+.nozoom{cursor:default!important;filter:none!important}
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <button class="btn" id="backBtn" type="button" hidden>&larr; Back</button>
+  <nav class="crumbs" id="crumbs" aria-label="Zoom path"></nav>
+  <div class="tools">
+    <button class="btn" id="pauseBtn" type="button">Pause motion</button>
+    <label>Speed <input type="range" id="speed" min="0.4" max="2" step="0.1" value="1" aria-label="Animation speed"></label>
+    <button class="btn" id="optBtn" type="button">Reading options</button>
+  </div>
+</header>
+
+<section class="start" id="startScreen">
+  <h1>Photosynthesis Zoom Lab</h1>
+  <p class="sub">Choose your adventure. Both adventures teach the same science, so pick the one you like!</p>
+  <div class="picks">
+    <div class="pick bus">
+      <svg viewBox="0 0 260 150" role="img" aria-label="A bus shrinking toward a leaf"><rect width="260" height="150" fill="#fffbe8"/><rect x="20" y="50" width="140" height="56" rx="10" fill="#ffd43b" stroke="#000" stroke-width="3"/><rect x="32" y="60" width="26" height="22" fill="#fff" stroke="#000" stroke-width="2"/><rect x="66" y="60" width="26" height="22" fill="#fff" stroke="#000" stroke-width="2"/><rect x="100" y="60" width="26" height="22" fill="#fff" stroke="#000" stroke-width="2"/><rect x="134" y="60" width="20" height="22" fill="#fff" stroke="#000" stroke-width="2"/><circle cx="55" cy="108" r="12" fill="#444" stroke="#000" stroke-width="3"/><circle cx="125" cy="108" r="12" fill="#444" stroke="#000" stroke-width="3"/><path d="M178 70 L210 70 M200 62 L212 70 L200 78" fill="none" stroke="#000" stroke-width="3"/><path d="M215 105 C215 70 250 55 250 55 C250 90 235 105 215 105 Z" fill="#bfe3a8" stroke="#000" stroke-width="3"/></svg>
+      <h2>The Shrink-Bus Field Trip</h2>
+      <p>Climb aboard a bus that can shrink as small as a grain of sand. Drive into a plant, then into a leaf, a cell, and a chloroplast. You are the tour guide!</p>
+      <button class="btn primary" id="goBus" type="button">Start the field trip</button>
+    </div>
+    <div class="pick quest">
+      <svg viewBox="0 0 260 150" role="img" aria-label="A shield with a leaf and a sword"><rect width="260" height="150" fill="#f6f0ff"/><path d="M130 14 L186 32 C186 80 164 112 130 134 C96 112 74 80 74 32 Z" fill="#fff" stroke="#000" stroke-width="4"/><path d="M130 44 C108 56 108 92 130 108 C152 92 152 56 130 44 Z" fill="#bfe3a8" stroke="#000" stroke-width="3"/><path d="M130 50 L130 104" stroke="#000" stroke-width="2.5"/><path d="M52 126 L104 40 M44 118 L62 132 M48 114 L66 128" fill="none" stroke="#000" stroke-width="5" stroke-linecap="round"/><path d="M208 126 L156 40" stroke="#000" stroke-width="5" stroke-linecap="round" fill="none"/></svg>
+      <h2>Quest of the Green Realm</h2>
+      <p>A plant is a giant realm full of hidden magic. Enter the gates of the leaf, descend into the chamber of the chloroplast, and learn how the realm makes its power.</p>
+      <button class="btn primary" id="goQuest" type="button">Begin the quest</button>
+    </div>
+  </div>
+</section>
+<div class="titleRow" id="titleRow" hidden><span class="advTag" id="advTag"></span><h1 id="title"></h1><span class="badge" id="lvl"></span><span class="badge" id="scale"></span></div>
+<section class="qScreen" id="qScreen" hidden>
+  <div class="qPanels" id="qPanels">
+    <div class="qImg" id="qImg"></div>
+    <div class="qLive">
+      <div class="qLiveHead">
+        <span class="qCap" id="qLiveCap">Look at the moving picture. Tap a part to read about it.</span>
+        <span class="qNav"><button class="btn" id="qBackBtn" type="button">&larr; Zoom back out</button><button class="btn" id="qReset" type="button">Back to this picture</button></span>
+      </div>
+      <div id="qLiveHost"></div>
+    </div>
+  </div>
+  <div class="qBottom">
+    <div class="qMain">
+      <div class="qTag" id="qTag"></div>
+      <h2 class="qText" id="qText"></h2>
+      <div id="qOpts" class="qOpts"></div>
+      <div class="qFeed" id="qFeed" aria-live="polite"></div>
+    </div>
+    <div id="qSideHost"></div>
+  </div>
+</section>
+<main class="layout" id="layout" hidden>
+  <div>
+    <div class="stage" id="stage"></div>
+    <div class="stageBar" id="stageBar"></div>
+  </div>
+  <aside class="side" id="side" aria-label="Explanations"></aside>
+</main>
+
+<div class="guide" id="guide" hidden>
+  <div class="guideMain">
+    <div class="guideTag" id="gTag"></div>
+    <div class="guideText" id="gText" aria-live="polite"></div>
+    <div class="guideLock" id="gLock" hidden></div>
+    <div class="guideHint" id="gHint" hidden></div>
+    <div class="guideWarn" id="gWarn" hidden><span id="gWarnTxt"></span><button class="btn" id="gTake" type="button">Take me there</button></div>
+  </div>
+  <div class="guideBtns">
+    <button class="btn" id="gPrev" type="button">&larr; Previous step</button>
+    <button class="btn" id="gHelp" type="button">? Help: show me</button>
+    <button class="btn" id="gRead" type="button">Read aloud</button>
+    <button class="btn primary" id="gNext" type="button">Next step &rarr;</button>
+    <span id="gFinal" hidden>
+      <button class="btn primary" id="gRoots" type="button">Visit the roots</button>
+      <button class="btn primary" id="gStem" type="button">Visit the stem</button>
+      <button class="btn" id="gAgain" type="button">Choose an adventure</button>
+    </span>
+    <button class="linkBtn" id="gSkip" type="button">Skip this step</button>
+  </div>
+</div>
+
+<div class="defbox" id="defBox" hidden role="status">
+  <b id="defT"></b>: <span id="defD"></span>
+  <div class="row"><button class="btn" id="defSay" type="button">Read aloud</button><button class="btn" id="defX" type="button">Close</button></div>
+</div>
+
+<dialog id="optDlg" aria-labelledby="optH">
+  <h2 id="optH">Reading options</h2>
+  <div class="opt"><span>Easier-to-read text (wide spacing)</span><input type="checkbox" id="optDys" style="width:24px;height:24px"></div>
+  <div class="opt"><span>Text size</span><span><button class="btn" id="optSm" type="button">A&minus;</button> <button class="btn" id="optLg" type="button">A+</button></span></div>
+  <div class="opt"><span>Page color</span><select id="optTint"><option value="none">Standard</option><option value="cream">Cream</option><option value="blue">Light blue</option><option value="mint">Light green</option></select></div>
+  <p>Tip: tap any word with a dotted underline to see what it means. Use &ldquo;Read aloud&rdquo; to hear any explanation.</p>
+  <div class="row"><button class="btn primary" id="optX" type="button">Done</button></div>
+</dialog>
+
+
+<script>
+(function(){
+'use strict';
+var NS='http://www.w3.org/2000/svg';
+var $=function(s){return document.querySelector(s)};
+var clamp=function(v,a,b){return Math.max(a,Math.min(b,v))};
+
+/* ---------- Particle kinds (shape + text label, color is only a bonus) ---------- */
+var KINDS={
+  light:{label:'Light',fill:'#fff3a8',stroke:'#8a6d00',dash:'3 2'},
+  co2:{label:'CO₂',fill:'#e4e4e4',stroke:'#444'},
+  h2o:{label:'H₂O',fill:'#cfe8ff',stroke:'#1b5e8a'},
+  o2:{label:'O₂',fill:'#ffd9d0',stroke:'#a33a1f'},
+  sugar:{label:'Sugar',fill:'#ead8ff',stroke:'#5b2a86'},
+  atp:{label:'ATP',fill:'#d9f2d0',stroke:'#2d6a1e'},
+  adp:{label:'ADP',fill:'#f4f4f4',stroke:'#555',dash:'3 2'}
+};
+
+/* ---------- Glossary ---------- */
+var GLOSS={
+ 'photosynthesis':'The process plants use to turn light energy, water, and carbon dioxide into sugar and oxygen.',
+ 'reactant':'A starting ingredient in a chemical reaction. It goes IN.',
+ 'product':'What a chemical reaction makes. It comes OUT.',
+ 'glucose':'A simple sugar (C₆H₁₂O₆) that stores chemical energy.',
+ 'stomata':'Tiny pores (openings) in a leaf that let gases in and out.',
+ 'pore':'A tiny opening. The pore in the stomata lets gases in and out.',
+ 'xylem':'Tubes that carry water and minerals UP from the roots.',
+ 'phloem':'Tubes that carry sugar to the parts of the plant that need it.',
+ 'chloroplast':'The cell part (organelle) where photosynthesis happens.',
+ 'chlorophyll':'The green pigment that absorbs light energy.',
+ 'thylakoid':'Flat, disc-shaped sacs inside a chloroplast. The light-dependent reactions happen on their membranes.',
+ 'stroma':'The fluid inside a chloroplast, around the thylakoids. The light-independent reactions happen here.',
+ 'atp':'A small molecule that carries energy a cell can use right away, like a charged battery.',
+ 'light-independent reactions':'The second stage of photosynthesis. These reactions happen in the stroma. They do not use light directly. They build sugar (glucose) from CO₂.',
+ 'light-dependent reactions':'The first stage of photosynthesis. These reactions need light. They happen in the thylakoid and use chlorophyll. Light energy is captured in ATP, and O₂ is released.',
+ 'root hair':'A tiny hair-like part of a root cell. It soaks up water.',
+ 'cell':'The smallest living part of a plant. Plants are made of many cells.'
+};
+
+/* ---------- Info cards ---------- */
+var INFO={
+ intro_plant:{t:'The big picture',h:'<p>Plants make their own food. This is <b>photosynthesis</b>.</p><p>Three things go <b>IN</b>: light, carbon dioxide (CO₂), and water (H₂O). Two things come <b>OUT</b>: sugar (glucose) and oxygen (O₂).</p><p>Tap an item in the list to follow just that one.</p>'},
+ f_light:{t:'Light energy (reactant)',h:'<p>Sunlight lands on the leaves. Chlorophyll inside the chloroplasts absorbs it. This energy powers photosynthesis.</p>'},
+ f_co2:{t:'Carbon dioxide, CO₂ (reactant)',h:'<p>CO₂ comes from the air. It enters the leaf through tiny openings called stomata. The plant uses the carbon to build sugar.</p>'},
+ f_h2o:{t:'Water, H₂O (reactant)',h:'<p>Roots take in water from the soil. The water travels up the xylem to the leaves.</p>'},
+ f_sugar:{t:'Sugar, glucose (product)',h:'<p>Sugar is made in the leaves. It travels through the phloem to the rest of the plant. Cells use it for energy and to grow.</p>'},
+ f_o2:{t:'Oxygen, O₂ (product)',h:'<p>Oxygen is released through the stomata as a by-product. Animals, including us, breathe it.</p>'},
+
+ intro_leaf:{t:'Inside a leaf',h:'<p>This is a slice through a leaf (a cross-section). Light comes in from the top.</p><p>Tap the green <b>cells</b> to zoom into one cell, or tap the <b>stomata</b> to zoom into a pore. Tap the tubes to learn about <b>xylem</b> and <b>phloem</b>.</p>'},
+ intro_pore:{t:'Inside the stomata: the pore',h:'<p>The top picture looks straight down at the leaf surface. The bottom picture is a side view.</p><p>Two cells surround each pore and open and close it. Press the button to open and close the pore. Gases move only when the pore is open.</p>'},
+ stomcells:{t:'Opening and closing',h:'<p>Two cells surround the pore. When water flows into them, they swell and bend apart, and the <b>pore</b> opens. When water leaves, they relax and the pore closes. These cells have <b>chloroplasts</b> too.</p><p>Plants close their stomata when water is scarce. But then CO₂ cannot get in, so photosynthesis slows down.</p>'},
+ vein:{t:'Xylem and phloem',h:'<p><b>Xylem</b> tubes bring water in from the roots. <b>Phloem</b> tubes carry sugar away from the leaf to the rest of the plant.</p>'},
+
+ intro_cell:{t:'Inside one leaf cell',h:'<p>This is one <b>cell</b> from a leaf. It is packed with <b>chloroplasts</b>, where photosynthesis happens.</p><p>Tap a chloroplast to zoom in.</p>'},
+
+ thylakoid:{t:'Thylakoid stacks',h:'<p>Each green “coin stack” is made of <b>thylakoids</b>. <b>Chlorophyll</b> in their membranes absorbs light. The <b>light-dependent reactions</b> happen here. They need light.</p>'},
+ stroma:{t:'Stroma',h:'<p>The <b>stroma</b> is the fluid around the thylakoids. The <b>light-independent reactions</b> happen here. They do not use light directly.</p>'},
+ indep:{t:'Light-independent reactions',h:'<p>In the <b>light-independent reactions</b>, CO₂ is built into sugar. They use energy carried by ATP from the light-dependent reactions. They do not use light directly.</p>'},
+
+ intro_root:{t:'Inside a root hair cell',h:'<p>Roots are underground, so there is no light and no chloroplasts. <b>Roots do not make sugar.</b></p><p>The long, thin <b>root hair</b> gives the cell lots of surface area to take in water.</p><p>The water goes into the <b>xylem</b>. Sugar comes down from the leaves in the <b>phloem</b>.</p>'},
+ hair:{t:'Root hair',h:'<p>A <b>root hair</b> reaches between soil particles. Water moves into the cell, then on to the xylem.</p>'},
+ xylemR:{t:'Xylem',h:'<p>Water from the root cell enters the <b>xylem</b> and travels up toward the stem and leaves.</p>'},
+ phloemR:{t:'Phloem',h:'<p>The <b>phloem</b> brings sugar down from the leaves to feed root cells.</p>'},
+
+ intro_stem:{t:'Inside a stem',h:'<p>Two kinds of tubes run through the stem. <b>Xylem</b> carries water UP. <b>Phloem</b> carries sugar to where it is needed.</p><p>Tap a tube to learn more.</p>'},
+ xylemS:{t:'Xylem: water goes UP',h:'<p><b>Xylem</b> tubes are hollow. Water travels up them from the roots to the leaves.</p>'},
+ phloemS:{t:'Phloem: sugar goes where it is needed',h:'<p><b>Phloem</b> tubes are alive. Sugar made in the leaves moves through them to roots, fruits, and growing parts.</p>'},
+ bundle:{t:'Stem cross-section',h:'<p>If you cut a stem across, you see a ring of small bundles. Each bundle has xylem and phloem side by side.</p>'}
+};
+
+/* ---------- Chloroplast steps ---------- */
+var ALLG=['light','water','o2','energy','return','co2','indep','sugar'];
+var STEPG=[ALLG,['light'],['light','water','o2'],['light','water','o2','energy'],['light','water','o2','energy','co2','indep','return'],ALLG];
+var CSTEPS=[
+ {t:'Overview',h:'<p>Everything happens at once in a working chloroplast. Press <b>Next step</b> to build it one idea at a time.</p>'},
+ {t:'Step 1: Light is absorbed',h:'<p><b>Chlorophyll</b> in the <b>thylakoid</b> membranes absorbs light energy.</p>'},
+ {t:'Step 2: Water is split',h:'<p>Light energy splits water molecules (H₂O). <b>Oxygen (O₂) is released.</b> This is the oxygen we breathe, and it comes from <b>water</b>, not from CO₂.</p>'},
+ {t:'Step 3: Energy is stored in ATP',h:'<p>The energy from light is used to make <b>ATP</b>. Think of it as a charged battery.</p><p>Light energy has been changed into <b>chemical energy</b>. Steps 1–3 are the <b>light-dependent reactions</b>. They need light.</p>'},
+ {t:'Step 4: The light-independent reactions build sugar',h:'<p>In the <b>stroma</b>, the <b>light-independent reactions</b> use CO₂ plus energy from ATP to build sugar. They do not use light directly.</p><p>The used-up carrier (ADP) goes back to the thylakoids to be recharged.</p>'},
+ {t:'Step 5: Sugar leaves',h:'<p>The sugar (glucose) is used by the cell or sent through the <b>phloem</b> to the rest of the plant.</p><p>Overall: 6 CO₂ + 6 H₂O + light energy → C₆H₁₂O₆ + 6 O₂</p>'}
+];
+
+/* ---------- SVG helpers ---------- */
+var DEFS='<defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#444"/></marker>'+
+ '<pattern id="soilDots" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="5" cy="6" r="1.8" fill="#b79f7c"/><circle cx="15" cy="16" r="2.2" fill="#b79f7c"/></pattern></defs>';
+function G(id,d,kind,grp){return '<path id="'+id+'" class="guide" data-flow="'+(grp||kind)+'" d="'+d+'" fill="none" stroke="'+KINDS[kind].stroke+'" stroke-width="2.2" stroke-dasharray="7 6" opacity=".6" marker-end="url(#ah)"/>'}
+function T(x,y,t,o){o=o||{};return '<text class="lbl'+(o.c?' '+o.c:'')+'" x="'+x+'" y="'+y+'"'+(o.a?' text-anchor="'+o.a+'"':'')+(o.f?' data-flow="'+o.f+'"':'')+'>'+t+'</text>'}
+function sunRays(cx,cy,r1,r2,n){var s='';for(var i=0;i<n;i++){var a=i*2*Math.PI/n;s+='<line x1="'+(cx+r1*Math.cos(a)).toFixed(1)+'" y1="'+(cy+r1*Math.sin(a)).toFixed(1)+'" x2="'+(cx+r2*Math.cos(a)).toFixed(1)+'" y2="'+(cy+r2*Math.sin(a)).toFixed(1)+'" stroke="#8a6d00" stroke-width="3" stroke-linecap="round"/>'}return s}
+function chloroIcon(cx,cy,rx,ry){
+  var s='<ellipse cx="'+cx+'" cy="'+cy+'" rx="'+rx+'" ry="'+ry+'" fill="#7cc66b" stroke="#1f4d17" stroke-width="2.5"/>';
+  for(var i=-1;i<=1;i++){s+='<rect x="'+(cx-9)+'" y="'+(cy+i*14-3.5)+'" width="18" height="7" rx="3.5" fill="#3f8f33" stroke="#1f4d17" stroke-width="1.2"/>'}
+  return s;
+}
+
+/* ---------- Particle engine ---------- */
+var eng={parts:[],hidden:new Set(),paused:false,speed:1,last:0,raf:0};
+function chip(kind,fs){
+  var k=KINDS[kind];var w=Math.round(k.label.length*fs*0.72+12),h=Math.round(fs+9);
+  var g=document.createElementNS(NS,'g');g.setAttribute('class','chip');
+  g.innerHTML='<rect x="'+(-w/2)+'" y="'+(-h/2)+'" width="'+w+'" height="'+h+'" rx="'+(h/2)+'" fill="'+k.fill+'" stroke="'+k.stroke+'" stroke-width="1.6"'+(k.dash?' stroke-dasharray="'+k.dash+'"':'')+'/>'+
+   '<text text-anchor="middle" dominant-baseline="central" font-size="'+fs+'" font-weight="700" fill="#111">'+k.label+'</text>';
+  return g;
+}
+function addFlows(svg,list,fs){
+  var layer=svg.querySelector('#particles');
+  list.forEach(function(f){
+    var pe=svg.querySelector(f.p);if(!pe)return;var L=pe.getTotalLength();
+    for(var i=0;i<f.n;i++){
+      var el=chip(f.k,fs||11);layer.appendChild(el);
+      eng.parts.push({el:el,pe:pe,L:L,t:(i/f.n+(f.o||0))%1,d:f.d||6,g:f.g||f.k});
+    }
+  });
+  place(0);applyVis(svg);
+}
+function place(dt){
+  for(var i=0;i<eng.parts.length;i++){
+    var p=eng.parts[i];
+    p.t+=dt*eng.speed/p.d;if(p.t>1)p.t-=1;
+    var pt=p.pe.getPointAtLength(p.t*p.L);
+    p.el.setAttribute('transform','translate('+pt.x.toFixed(1)+','+pt.y.toFixed(1)+')');
+    p.el.setAttribute('opacity',Math.min(1,p.t/0.08,(1-p.t)/0.08).toFixed(2));
+  }
+}
+function tick(ts){
+  var dt=Math.min(0.05,(ts-eng.last)/1000||0);eng.last=ts;
+  if(!eng.paused)place(dt);
+  eng.raf=requestAnimationFrame(tick);
+}
+function clearFlows(){eng.parts.forEach(function(p){p.el.remove()});eng.parts=[]}
+function applyVis(svg){
+  svg=svg||$('#svg');if(!svg)return;
+  svg.querySelectorAll('[data-flow]').forEach(function(e){e.style.display=eng.hidden.has(e.getAttribute('data-flow'))?'none':''});
+  eng.parts.forEach(function(p){p.el.style.display=eng.hidden.has(p.g)?'none':''});
+}
+
+/* ---------- Screens: drawing ---------- */
+function drawPlant(){
+  var s=DEFS+'<g id="world">'+
+  '<rect width="640" height="600" fill="#f4f9ff"/>'+
+  '<rect y="372" width="640" height="228" fill="#efe3cf"/><rect y="372" width="640" height="228" fill="url(#soilDots)"/>'+
+  '<line x1="0" y1="372" x2="640" y2="372" stroke="#6b5a3e" stroke-width="3"/>'+
+  '<circle cx="90" cy="80" r="34" fill="#ffe27a" stroke="#8a6d00" stroke-width="3"/>'+sunRays(90,80,42,57,12)+
+  '<g fill="none" stroke="#7a5a2e" stroke-linecap="round">'+
+   '<path d="M320 372 C322 420 318 470 322 545" stroke-width="7"/>'+
+   '<path d="M321 412 C285 432 250 452 215 505" stroke-width="5"/>'+
+   '<path d="M321 440 C362 455 395 480 420 530" stroke-width="5"/>'+
+   '<path d="M320 485 C292 505 276 535 258 570" stroke-width="4"/>'+
+   '<path d="M322 505 C350 525 368 548 380 578" stroke-width="4"/></g>'+
+  '<path d="M320 372 C316 322 324 270 320 176" fill="none" stroke="#1f4d17" stroke-width="16" stroke-linecap="round"/>'+
+  '<path d="M320 372 C316 322 324 270 320 176" fill="none" stroke="#a9d68f" stroke-width="10" stroke-linecap="round"/>'+
+  '<path class="leaf" d="M318 292 C270 252 190 252 140 288 C195 335 280 335 318 292 Z" fill="#bfe3a8" stroke="#1f4d17" stroke-width="3"/>'+
+  '<path d="M318 292 C270 290 190 290 150 288" fill="none" stroke="#1f4d17" stroke-width="2"/>'+
+  '<path class="leaf" d="M322 242 C372 196 462 196 510 232 C460 282 372 288 322 242 Z" fill="#bfe3a8" stroke="#1f4d17" stroke-width="3"/>'+
+  '<path d="M322 242 C380 238 450 236 500 232" fill="none" stroke="#1f4d17" stroke-width="2"/>'+
+  '<path class="leaf" d="M320 178 C288 122 298 68 352 40 C390 92 374 150 320 178 Z" fill="#bfe3a8" stroke="#1f4d17" stroke-width="3"/>'+
+  '<path d="M320 178 C325 130 335 80 348 48" fill="none" stroke="#1f4d17" stroke-width="2"/>'+
+  G('fl1','M118 100 C150 160 190 220 228 262','light')+
+  G('fl2','M124 82 C220 100 330 150 408 206','light')+
+  G('fl3','M126 66 C190 56 270 66 330 100','light')+
+  G('fc1','M95 342 C130 332 180 322 226 312','co2')+
+  G('fc2','M565 285 C535 280 490 272 448 258','co2')+
+  G('fo1','M430 214 C470 190 520 160 575 140','o2')+
+  G('fo2','M342 100 C390 80 450 62 520 56','o2')+
+  G('fw1','M414 524 C395 480 358 455 322 425 C320 380 322 320 322 246 C360 242 405 236 445 232','h2o')+
+  G('fw2','M218 498 C250 462 298 440 318 412 C318 372 318 332 318 293 C280 290 230 288 195 288','h2o')+
+  G('fw3','M262 562 C282 520 305 492 319 470 C318 400 319 300 320 180 C324 140 336 98 348 60','h2o')+
+  G('fs1','M205 290 C250 291 296 292 324 296 C327 350 326 400 326 440 C326 480 326 520 326 548','sugar')+
+  G('fs2','M470 234 C420 238 370 243 328 248 C329 300 329 340 328 380 C332 425 345 460 364 500','sugar')+
+  T(14,162,'SUNLIGHT IN',{f:'light'})+T(18,326,'CO₂ IN',{f:'co2'})+T(505,318,'CO₂ IN',{f:'co2'})+
+  T(505,120,'O₂ OUT',{f:'o2'})+T(440,40,'O₂ OUT',{f:'o2'})+
+  T(336,352,'SUGAR DOWN ↓',{f:'sugar'})+T(304,352,'WATER UP ↑',{f:'h2o',a:'end'})+
+  T(430,566,'WATER IN',{f:'h2o'})+T(14,398,'SOIL')+
+  '<g id="particles"></g></g>'+
+  '<clipPath id="lensClip"><circle id="lensClipC" cx="430" cy="238" r="66"/></clipPath>'+
+  '<g id="lens" tabindex="0" role="button" aria-label="Magnifying lens. Drag it over a leaf, the stem, or the roots. Press Enter to zoom in.">'+
+   '<g clip-path="url(#lensClip)"><rect x="-200" y="-200" width="1040" height="1000" fill="#fff"/><use id="lensUse" href="#world"/></g>'+
+   '<line id="lensHandle" stroke="#111" stroke-width="12" stroke-linecap="round"/>'+
+   '<circle id="lensRing" cx="430" cy="238" r="66" fill="none" stroke="#111" stroke-width="6"/>'+
+   '<circle id="lensRing2" cx="430" cy="238" r="62" fill="none" stroke="#fff" stroke-width="2"/></g>';
+  return s;
+}
+
+function stomaSvg(cx){
+  return '<g class="hot" data-go="pore" data-label="Stomata. Zoom in to see the pore.">'+
+   '<rect x="'+(cx-6)+'" y="346" width="12" height="48" fill="#fff"/>'+
+   '<ellipse cx="'+(cx-17)+'" cy="367" rx="11" ry="20" fill="#cfeebf" stroke="#2d6a1e" stroke-width="2"/>'+
+   '<ellipse cx="'+(cx+17)+'" cy="367" rx="11" ry="20" fill="#cfeebf" stroke="#2d6a1e" stroke-width="2"/>'+
+   '<ellipse cx="'+(cx-17)+'" cy="360" rx="5" ry="3.5" fill="#7cc66b" stroke="#1f4d17"/><ellipse cx="'+(cx-17)+'" cy="374" rx="5" ry="3.5" fill="#7cc66b" stroke="#1f4d17"/>'+
+   '<ellipse cx="'+(cx+17)+'" cy="360" rx="5" ry="3.5" fill="#7cc66b" stroke="#1f4d17"/><ellipse cx="'+(cx+17)+'" cy="374" rx="5" ry="3.5" fill="#7cc66b" stroke="#1f4d17"/>'+
+   '<rect x="'+(cx-34)+'" y="340" width="68" height="60" fill="transparent"/></g>';
+}
+function drawLeaf(){
+  var s=DEFS+'<rect width="640" height="600" fill="#fbfdff"/>';
+  var x,i,j;
+  s+='<rect x="20" y="95" width="450" height="7" fill="#e6d9a0" stroke="#8a7a3b" stroke-width="1.5"/>';
+  s+='<rect x="20" y="102" width="450" height="44" fill="#f7f7ef" stroke="#777" stroke-width="1.5"/>';
+  for(x=76;x<470;x+=56)s+='<line x1="'+x+'" y1="102" x2="'+x+'" y2="146" stroke="#999" stroke-width="1.2"/>';
+  s+='<rect x="20" y="146" width="450" height="110" fill="#fff"/><rect x="20" y="256" width="450" height="90" fill="#fff"/>';
+  s+='<rect x="20" y="346" width="450" height="42" fill="#f7f7ef" stroke="#777" stroke-width="1.5"/>';
+  for(x=76;x<470;x+=56)s+='<line x1="'+x+'" y1="346" x2="'+x+'" y2="388" stroke="#999" stroke-width="1.2"/>';
+  s+='<rect x="20" y="388" width="450" height="6" fill="#e6d9a0" stroke="#8a7a3b" stroke-width="1.5"/>';
+  for(i=0;i<11;i++){
+    x=25+i*40;
+    s+='<rect x="'+(x+3)+'" y="149" width="34" height="104" rx="12" fill="#eef8e8" stroke="#2d6a1e" stroke-width="1.5"/>';
+    for(j=0;j<4;j++){s+='<ellipse cx="'+(x+(j%2?27:13))+'" cy="'+(168+j*24)+'" rx="6" ry="4" fill="#7cc66b" stroke="#1f4d17" stroke-width="1.2"/>'}
+  }
+  var sp=[[52,285],[120,285],[188,285],[256,285],[428,285],[86,322],[154,322],[222,322],[290,322],[418,322]];
+  s+='<g>';
+  s+='<rect x="20" y="256" width="450" height="90" fill="transparent"/>';
+  sp.forEach(function(c){
+    s+='<ellipse cx="'+c[0]+'" cy="'+c[1]+'" rx="28" ry="22" fill="#f1f8ec" stroke="#2d6a1e" stroke-width="1.5"/>';
+    s+='<ellipse cx="'+(c[0]-8)+'" cy="'+(c[1]-3)+'" rx="5" ry="3.5" fill="#7cc66b" stroke="#1f4d17"/><ellipse cx="'+(c[0]+9)+'" cy="'+(c[1]+5)+'" rx="5" ry="3.5" fill="#7cc66b" stroke="#1f4d17"/>';
+  });
+  s+='</g>';
+  s+=stomaSvg(90)+stomaSvg(215);
+  s+='<g class="hot" data-info="vein" data-label="Xylem and phloem">'+
+   '<circle cx="350" cy="300" r="36" fill="#fffbe6" stroke="#8a6d00" stroke-width="2.5"/>'+
+   '<circle cx="338" cy="286" r="9" fill="#fff" stroke="#1b5e8a" stroke-width="3"/><circle cx="360" cy="284" r="9" fill="#fff" stroke="#1b5e8a" stroke-width="3"/>'+
+   '<circle cx="336" cy="314" r="6" fill="#efe0ff" stroke="#5b2a86" stroke-width="2"/><circle cx="350" cy="320" r="6" fill="#efe0ff" stroke="#5b2a86" stroke-width="2"/><circle cx="364" cy="314" r="6" fill="#efe0ff" stroke="#5b2a86" stroke-width="2"/>'+
+   T(349,268,'xylem',{c:'s',a:'middle'})+T(349,342,'phloem',{c:'s',a:'middle'})+
+   '<circle cx="350" cy="300" r="36" fill="transparent"/></g>';
+  s+='<g class="hot" data-go="cell" data-label="Leaf cells. Zoom in to one cell."><rect x="20" y="146" width="450" height="110" fill="transparent"/></g>';
+  s+='<rect class="pulse" x="223" y="144" width="44" height="114" rx="14" fill="none" stroke="#d97706" stroke-width="3.5" stroke-dasharray="6 4"/>';
+  s+='<rect class="pulse" x="54" y="336" width="72" height="64" rx="14" fill="none" stroke="#d97706" stroke-width="3.5" stroke-dasharray="6 4"/><rect class="pulse" x="179" y="336" width="72" height="64" rx="14" fill="none" stroke="#d97706" stroke-width="3.5" stroke-dasharray="6 4"/>';
+  s+='<g stroke="#777" stroke-width="1.2"><line x1="438" y1="168" x2="480" y2="168"/><line x1="466" y1="215" x2="480" y2="215"/><line x1="386" y1="310" x2="480" y2="334"/></g>';
+  s+=T(484,172,'Chloroplast',{c:'s'})+T(484,219,'Cell',{c:'s'})+T(484,338,'Xylem, phloem',{c:'s'})+
+     T(90,418,'Stomata',{c:'s',a:'middle'})+T(215,418,'Stomata',{c:'s',a:'middle'});
+  s+=G('ll1','M60 30 L80 175','light')+G('ll2','M220 30 L240 175','light')+G('ll3','M380 30 L400 175','light');
+  s+=G('lc1','M28 560 C60 480 84 420 87 367 C88 330 95 300 104 262 C108 240 122 215 132 200','co2');
+  s+=G('lc2','M200 575 C208 500 212 420 212 367 C212 330 225 300 238 262 C242 240 244 220 245 205','co2');
+  s+=G('lo1','M150 205 C142 250 124 300 94 345 C92 380 110 440 150 530','o2');
+  s+=G('lw1','M342 274 C322 250 292 226 264 206','h2o');
+  s+=G('ls1','M268 214 C282 258 322 296 344 314','sugar');
+  s+=T(100,22,'SUNLIGHT IN',{f:'light'})+T(8,586,'CO₂ IN',{f:'co2'})+T(215,592,'CO₂ IN',{f:'co2'})+T(118,560,'O₂ OUT',{f:'o2'});
+  s+='<g id="particles"></g>';
+  return s;
+}
+
+function drawCell(){
+  var s=DEFS+'<rect width="640" height="600" fill="#fbfdff"/>';
+  s+='<rect x="110" y="70" width="360" height="470" rx="46" fill="#f7fbf3" stroke="#8a7a3b" stroke-width="10"/>';
+  s+='<rect x="118" y="78" width="344" height="454" rx="40" fill="none" stroke="#555" stroke-width="2"/>';
+  var cps=[[150,220],[150,330],[150,440],[430,180],[430,290],[430,400]];
+  cps.forEach(function(c,idx){
+    s+='<g class="hot" data-go="chloro" data-label="Chloroplast. Zoom in.">'+chloroIcon(c[0],c[1],24,40)+'</g>';
+  });
+  s+='<ellipse class="pulse" cx="150" cy="330" rx="36" ry="52" fill="none" stroke="#d97706" stroke-width="3.5" stroke-dasharray="6 4"/>';
+  s+='<g stroke="#777" stroke-width="1.2"><line x1="454" y1="290" x2="480" y2="290"/><line x1="466" y1="120" x2="480" y2="120"/></g>';
+  s+=T(484,294,'Chloroplast',{c:'s'})+T(484,124,'Cell',{c:'s'});
+  s+=G('cl1','M150 25 C150 80 150 120 150 190','light')+G('cl2','M430 25 L430 140','light');
+  s+=G('cc1','M20 365 C70 365 110 355 142 345','co2')+G('cc2','M20 450 L135 450','co2');
+  s+=G('co1','M150 310 C110 290 70 275 20 270','o2');
+  s+=G('cw1','M300 595 C300 560 280 520 240 495 C200 480 170 468 160 452','h2o')+G('cw2','M330 595 C340 560 380 520 410 470 C425 455 430 445 430 436','h2o');
+  s+=G('cs1','M432 425 C430 480 410 540 396 595','sugar');
+  s+=T(100,20,'SUNLIGHT IN',{f:'light'})+T(8,392,'CO₂ IN',{f:'co2'})+T(8,258,'O₂ OUT',{f:'o2'})+T(250,588,'WATER IN',{f:'h2o',a:'end'})+T(440,588,'SUGAR OUT',{f:'sugar'});
+  s+='<g id="particles"></g>';
+  return s;
+}
+
+function granum(cx,cy){
+  var s='';for(var i=0;i<5;i++){s+='<rect x="'+(cx-45)+'" y="'+(cy-48+i*20)+'" width="90" height="15" rx="7.5" fill="#4f9f3f" stroke="#1f4d17" stroke-width="2"/>'}return s;
+}
+function drawChloro(){
+  var s=DEFS;
+  s+='<rect width="640" height="600" fill="#fbfdff"/>';
+  s+='<g class="hot" data-info="stroma" data-label="Stroma"><ellipse cx="320" cy="300" rx="300" ry="255" fill="#e8f5e1" stroke="#1f4d17" stroke-width="5"/><ellipse cx="320" cy="300" rx="288" ry="243" fill="none" stroke="#1f4d17" stroke-width="2"/></g>';
+  s+='<rect id="zoneL" class="zone" x="70" y="120" width="350" height="340" rx="22"/><rect id="zoneC" class="zone" x="435" y="200" width="140" height="200" rx="22"/>';
+  s+='<g fill="none" stroke="#4f9f3f" stroke-width="4"><path d="M205 245 C225 245 235 225 245 220"/><path d="M160 296 C160 330 180 340 190 337"/><path d="M290 262 C290 300 310 320 320 317"/><path d="M235 385 L275 372"/></g>';
+  s+='<g class="hot" data-info="thylakoid" data-label="Thylakoid stacks">'+granum(160,250)+granum(290,215)+granum(190,385)+granum(320,365)+'</g>';
+  s+='<g class="hot" data-info="indep" data-label="Light-independent reactions"><circle cx="505" cy="300" r="52" fill="#f6fbf3" stroke="none"/><path id="ring" class="flowdash" data-flow="indep" d="M505 248 A52 52 0 1 1 504.9 248" fill="none" stroke="#2d6a1e" stroke-width="4" marker-end="url(#ah)"/>'+T(505,298,'Builds',{c:'s',a:'middle'})+T(505,314,'sugar',{c:'s',a:'middle'})+'</g>';
+  s+=T(245,142,'LIGHT-DEPENDENT REACTIONS',{c:'m',a:'middle'})+T(245,160,'(on thylakoid membranes)',{c:'s',a:'middle'});
+  s+=T(505,204,'LIGHT-',{c:'m',a:'middle'})+T(505,219,'INDEPENDENT',{c:'m',a:'middle'})+T(505,234,'REACTIONS',{c:'m',a:'middle'})+T(505,386,'(in the stroma)',{c:'s',a:'middle'});
+  s+=T(160,174,'Thylakoid stack',{c:'s',a:'middle'})+T(160,188,'(has chlorophyll)',{c:'s',a:'middle'})+T(250,500,'Stroma (fluid)',{c:'s',a:'middle'})+T(320,78,'Double membrane',{c:'s',a:'middle'});
+  s+=G('gl1','M110 18 L140 195','light')+G('gl2','M270 18 L285 160','light');
+  s+=G('gw1','M40 565 C100 520 160 470 185 440','h2o','water');
+  s+=G('go1','M130 215 C90 170 50 110 20 40','o2');
+  s+=G('ge1','M240 262 C330 268 390 285 450 295','atp','energy');
+  s+=G('gr1','M452 275 C390 250 330 250 270 252','adp','return');
+  s+=G('gc1','M612 120 C585 150 560 200 530 252','co2');
+  s+=G('gs1','M505 352 C520 420 560 490 600 560','sugar');
+  s+=T(14,40,'O₂ OUT',{f:'o2'})+T(60,30,'LIGHT IN',{f:'light'})+T(8,592,'WATER IN',{f:'water'})+T(520,112,'CO₂ IN',{f:'co2'})+T(528,584,'SUGAR OUT',{f:'sugar'});
+  s+='<g id="particles"></g>';
+  return s;
+}
+
+function drawRoot(){
+  var s=DEFS+'<rect width="640" height="600" fill="#fbfdff"/>';
+  s+='<rect x="0" y="0" width="300" height="600" fill="#efe3cf"/><rect x="0" y="0" width="300" height="600" fill="url(#soilDots)"/>';
+  [[40,60,16],[110,40,10],[200,70,18],[260,130,12],[50,160,12],[150,150,14],[230,190,10],[30,330,18],[130,350,15],[220,330,12],[60,430,14],[180,440,18],[250,400,10],[100,520,16],[230,520,14],[40,560,10]].forEach(function(c){
+    s+='<circle cx="'+c[0]+'" cy="'+c[1]+'" r="'+c[2]+'" fill="#d9c6a3" stroke="#8a6d4a" stroke-width="2"/>';
+  });
+  [[90,285],[190,215],[250,300],[110,205]].forEach(function(c){s+='<ellipse cx="'+c[0]+'" cy="'+c[1]+'" rx="26" ry="8" fill="#cfe8ff" stroke="#1b5e8a" stroke-width="1.5" opacity=".9"/>'});
+  s+='<g class="hot" data-info="hair" data-label="Root hair"><path d="M300 255 C240 245 150 240 70 252 C150 272 240 285 300 315 Z" fill="#f1f8ec" stroke="#2d6a1e" stroke-width="2.5"/></g>';
+  s+='<rect x="300" y="190" width="148" height="250" rx="24" fill="#f1f8ec" stroke="#2d6a1e" stroke-width="3"/>';
+  for(var y=130;y<580;y+=90){s+='<rect x="452" y="'+y+'" width="68" height="88" rx="10" fill="#f6fbf3" stroke="#9bbf8b" stroke-width="1.5"/>'}
+  s+='<g class="hot" data-info="phloemR" data-label="Phloem"><rect x="520" y="0" width="42" height="250" rx="6" fill="#f4e9ff" stroke="#5b2a86" stroke-width="3"/><line x1="520" y1="70" x2="562" y2="70" stroke="#5b2a86" stroke-width="4" stroke-dasharray="3 3"/><line x1="520" y1="170" x2="562" y2="170" stroke="#5b2a86" stroke-width="4" stroke-dasharray="3 3"/>'+T(541,40,'PHLOEM',{c:'s',a:'middle'})+T(541,56,'sugar in',{c:'s',a:'middle'})+'</g>';
+  s+='<g class="hot" data-info="xylemR" data-label="Xylem"><rect x="568" y="0" width="44" height="600" fill="#e9f4ff" stroke="#1b5e8a" stroke-width="3"/>';
+  for(var yy=20;yy<600;yy+=26)s+='<line x1="568" y1="'+yy+'" x2="612" y2="'+yy+'" stroke="#1b5e8a" stroke-width="1.5"/>';
+  s+=T(590,500,'XYLEM',{c:'s',a:'middle'})+T(590,516,'water up',{c:'s',a:'middle'})+'</g>';
+  s+=T(120,236,'Root hair',{c:'s',a:'middle'})+T(374,182,'Root hair cell',{c:'s',a:'middle'})+
+     T(200,42,'soil particle',{c:'s',a:'middle'})+T(190,244,'water in soil',{c:'s',a:'middle'});
+  s+=G('rw1','M90 258 C170 262 250 290 330 318 C400 336 470 338 540 336 C565 335 585 320 588 290 L588 15','h2o');
+  s+=G('rw2','M110 270 C180 285 250 305 320 325 C390 345 470 346 540 340 C568 338 586 322 588 290','h2o');
+  s+=G('rs1','M534 15 L534 235 C534 262 500 272 470 282 C440 292 420 302 392 322','sugar');
+  s+='<g id="particles"></g>';
+  return s;
+}
+
+function drawStem(){
+  var s=DEFS+'<rect width="640" height="600" fill="#fbfdff"/>';
+  var r,c;
+  for(c=0;c<10;c++)for(r=0;r<10;r++){s+='<rect x="'+(65+c*39)+'" y="'+(r*60)+'" width="38" height="58" rx="6" fill="#f1f8ec" stroke="#b8d3a9" stroke-width="1.2"/>'}
+  s+='<line x1="60" y1="0" x2="60" y2="600" stroke="#2d6a1e" stroke-width="5"/><line x1="460" y1="0" x2="460" y2="600" stroke="#2d6a1e" stroke-width="5"/>';
+  s+='<g class="hot" data-info="xylemS" data-label="Xylem"><rect x="135" y="0" width="60" height="600" fill="#e9f4ff" stroke="#1b5e8a" stroke-width="3"/>';
+  for(r=14;r<600;r+=26)s+='<line x1="135" y1="'+r+'" x2="195" y2="'+r+'" stroke="#1b5e8a" stroke-width="1.8"/>';
+  s+='</g>';
+  s+='<g class="hot" data-info="phloemS" data-label="Phloem"><rect x="300" y="0" width="60" height="600" fill="#f4e9ff" stroke="#5b2a86" stroke-width="3"/>';
+  for(r=100;r<600;r+=100)s+='<line x1="300" y1="'+r+'" x2="360" y2="'+r+'" stroke="#5b2a86" stroke-width="4" stroke-dasharray="3 3"/>';
+  s+='</g>';
+  s+=T(165,28,'XYLEM',{c:'b',a:'middle'})+T(165,46,'water UP ↑',{c:'s',a:'middle'})+T(330,28,'PHLOEM',{c:'b',a:'middle'})+T(330,46,'sugar DOWN ↓',{c:'s',a:'middle'})+
+     T(165,584,'(from roots)',{c:'s',a:'middle'})+T(330,584,'(from leaves)',{c:'s',a:'middle'});
+  s+='<g class="hot" data-info="bundle" data-label="Stem cross-section"><circle cx="552" cy="130" r="62" fill="#f6fbf3" stroke="#2d6a1e" stroke-width="3"/>';
+  for(var i=0;i<8;i++){var a=i*Math.PI/4,bx=552+36*Math.cos(a),by=130+36*Math.sin(a);
+    s+='<circle cx="'+bx.toFixed(1)+'" cy="'+by.toFixed(1)+'" r="10" fill="#f4e9ff" stroke="#5b2a86" stroke-width="2"/><circle cx="'+(bx+(552-bx)*0.2).toFixed(1)+'" cy="'+(by+(130-by)*0.2).toFixed(1)+'" r="5" fill="#e9f4ff" stroke="#1b5e8a" stroke-width="2"/>';}
+  s+='</g>'+T(552,214,'Stem cross-section',{c:'s',a:'middle'})+T(552,230,'(cut across)',{c:'s',a:'middle'});
+  s+=G('sw1','M165 595 L165 10','h2o')+G('ss1','M330 10 L330 595','sugar');
+  s+='<g id="particles"></g>';
+  return s;
+}
+
+function gcPaths(g){
+  var c=(320-1.333*g).toFixed(1),c2=(320+1.333*g).toFixed(1);
+  return [
+   'M320 100 C215 115 165 190 165 230 C165 270 215 345 320 360 C'+c+' 273 '+c+' 187 320 100 Z',
+   'M320 100 C425 115 475 190 475 230 C475 270 425 345 320 360 C'+c2+' 273 '+c2+' 187 320 100 Z',
+   'M320 100 C'+c+' 187 '+c+' 273 320 360 C'+c2+' 273 '+c2+' 187 320 100 Z'];
+}
+function drawPore(){
+  var p=gcPaths(46);
+  var s=DEFS+'<rect width="640" height="600" fill="#fbfdff"/>';
+  s+=T(320,22,'TOP VIEW: looking down at the leaf surface',{c:'s',a:'middle'});
+  [[30,60,125,95],[30,165,125,95],[30,270,125,90],[485,60,125,95],[485,165,125,95],[485,270,125,90],[190,36,260,52]].forEach(function(r){
+    s+='<rect x="'+r[0]+'" y="'+r[1]+'" width="'+r[2]+'" height="'+r[3]+'" rx="18" fill="#f7f7ef" stroke="#999" stroke-width="1.5"/>';
+  });
+  s+='<path id="gcP" d="'+p[2]+'" fill="#b8c6d3"/>';
+  s+='<g class="hot" data-info="stomcells" data-label="The two cells that open and close the pore"><path id="gcL" d="'+p[0]+'" fill="#cfeebf" stroke="#2d6a1e" stroke-width="3"/>'+
+     '<ellipse cx="210" cy="185" rx="14" ry="9" fill="#7cc66b" stroke="#1f4d17" stroke-width="1.5"/><ellipse cx="195" cy="230" rx="14" ry="9" fill="#7cc66b" stroke="#1f4d17" stroke-width="1.5"/><ellipse cx="210" cy="275" rx="14" ry="9" fill="#7cc66b" stroke="#1f4d17" stroke-width="1.5"/></g>';
+  s+='<g class="hot" data-info="stomcells" data-label="The two cells that open and close the pore"><path id="gcR" d="'+p[1]+'" fill="#cfeebf" stroke="#2d6a1e" stroke-width="3"/>'+
+     '<ellipse cx="430" cy="185" rx="14" ry="9" fill="#7cc66b" stroke="#1f4d17" stroke-width="1.5"/><ellipse cx="445" cy="230" rx="14" ry="9" fill="#7cc66b" stroke="#1f4d17" stroke-width="1.5"/><ellipse cx="430" cy="275" rx="14" ry="9" fill="#7cc66b" stroke="#1f4d17" stroke-width="1.5"/></g>';
+  s+='<text id="plabel" class="lbl b" x="320" y="236" text-anchor="middle">PORE</text>';
+  s+='<text id="pstate" class="lbl b" x="320" y="396" text-anchor="middle">Pore is OPEN</text>';
+  s+=T(320,424,'SIDE VIEW: cross-section',{c:'s',a:'middle'});
+  s+='<rect x="60" y="432" width="520" height="38" fill="#eaf6e3"/><rect x="60" y="470" width="520" height="50" fill="#f7f7ef" stroke="#777" stroke-width="1.5"/>';
+  s+='<rect id="sgHole" x="274" y="470" width="92" height="50" fill="#fbfdff"/>';
+  s+='<ellipse id="sgL" cx="248" cy="495" rx="26" ry="25" fill="#cfeebf" stroke="#2d6a1e" stroke-width="2.5"/><ellipse id="sgR" cx="392" cy="495" rx="26" ry="25" fill="#cfeebf" stroke="#2d6a1e" stroke-width="2.5"/>';
+  s+=T(70,455,'Inside the leaf',{c:'s'})+T(70,556,'Outside air',{c:'s'});
+  s+=G('pg1','M300 585 L300 440','co2','gas')+G('pg2','M335 440 L335 585','o2','gas');
+  s+=T(292,580,'CO₂ IN ↑',{f:'gas',a:'end'})+T(346,580,'O₂ OUT ↓',{f:'gas'});
+  s+='<g id="particles"></g>';
+  return s;
+}
+function setupPore(svg){
+  var L=svg.querySelector('#gcL'),R=svg.querySelector('#gcR'),P=svg.querySelector('#gcP'),sL=svg.querySelector('#sgL'),sR=svg.querySelector('#sgR'),hole=svg.querySelector('#sgHole'),state=svg.querySelector('#pstate'),plab=svg.querySelector('#plabel');
+  var btn=$('#poreBtn'),g=46,open=true,raf=0;
+  addFlows(svg,[{p:'#pg1',k:'co2',n:2,d:4,g:'gas'},{p:'#pg2',k:'o2',n:2,d:4,g:'gas'}],10);
+  function setG(v){
+    g=v;var p=gcPaths(v);
+    L.setAttribute('d',p[0]);R.setAttribute('d',p[1]);P.setAttribute('d',p[2]);
+    sL.setAttribute('cx',320-(v+26));sR.setAttribute('cx',320+(v+26));
+    hole.setAttribute('x',320-v);hole.setAttribute('width',2*v);
+  }
+  function paint(withInfo){
+    state.textContent=open?'Pore is OPEN':'Pore is CLOSED';
+    plab.style.display=open?'':'none';
+    btn.textContent=open?'Close the pore':'Open the pore';
+    if(open)eng.hidden.delete('gas');else eng.hidden.add('gas');
+    applyVis(svg);
+    if(withInfo){
+      if(open)setInfo('The pore is open','<p>Water flows into the two cells around the pore, so they swell and bend apart. CO₂ can go in. O₂ goes out.</p>');
+      else setInfo('The pore is closed','<p>Water leaves the two cells around the pore, so they relax and the pore shuts. The plant saves water, but CO₂ cannot get in, so <b>photosynthesis</b> slows down.</p>');
+    }
+  }
+  btn.addEventListener('click',function(){
+    open=!open;if(!open)done('pore_closed');else if(has('pore_closed'))done('pore_reopened');var from=g,to=open?46:2,t0=null;cancelAnimationFrame(raf);
+    function step(ts){
+      if(t0===null)t0=ts;
+      var k=Math.min(1,(ts-t0)/700),e=k<0.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+      setG(from+(to-from)*e);
+      if(k<1)raf=requestAnimationFrame(step);
+    }
+    raf=requestAnimationFrame(step);
+    paint(true);
+  });
+  setG(46);paint(false);
+}
+/* ---------- Screen definitions ---------- */
+var REGION={
+ leaf:{name:'Leaf',msg:'Most photosynthesis happens here.',go:'leaf'},
+ stem:{name:'Stem',msg:'Tubes called xylem and phloem run through it.',go:'stem'},
+ root:{name:'Roots',msg:'Roots take in water from the soil.',go:'root'},
+ sun:{name:'Sun',msg:'The Sun is the source of the light energy.'},
+ air:{name:'Air',msg:'CO₂ comes in from the air. O₂ goes out into the air.'},
+ soil:{name:'Soil',msg:'Soil holds water and minerals. Plants do not get their food from soil.'}
+};
+var LEG={light:'Light energy',co2:'Carbon dioxide (CO₂)',h2o:'Water (H₂O)',sugar:'Sugar (glucose)',o2:'Oxygen (O₂)'};
+function flowBtn(k){return '<button type="button" class="btn flowBtn" data-k="'+k+'" aria-pressed="false"><span class="sw" style="background:'+KINDS[k].fill+';border-color:'+KINDS[k].stroke+'"></span>'+LEG[k]+'</button>'}
+var lastLens={x:560,y:118};
+
+var SCREENS={
+ plant:{crumb:'Whole plant',title:'The whole plant: what goes in and what comes out',scale:'About 50 cm tall',lvl:'Zoom level 1 of 4',
+  alt:'A plant with arrows showing light, carbon dioxide and water going in, and sugar and oxygen coming out.',
+  draw:drawPlant,intro:'intro_plant',
+  top:function(){return '<div class="card"><h2>Tap one to follow it</h2>'+
+    '<div class="grp"><span class="tag">Reactants (go IN)</span>'+['light','co2','h2o'].map(flowBtn).join('')+'</div>'+
+    '<div class="grp"><span class="tag">Products (come OUT)</span>'+['sugar','o2'].map(flowBtn).join('')+'</div>'+
+    '<p class="eq">6 CO₂ + 6 H₂O + light energy → C₆H₁₂O₆ + 6 O₂</p>'+
+    '<button class="btn" id="allBtn" type="button">Show all arrows</button></div>'},
+  bar:function(){return '<div class="msg" id="lensMsg" aria-live="polite"></div><button class="btn primary" id="zoomBtn" type="button">Zoom in</button>'},
+  setup:setupPlant},
+ leaf:{crumb:'Leaf',title:'Zoom 2: inside a leaf',scale:'About 0.3 mm thick',lvl:'Zoom level 2 of 4',
+  alt:'Cross-section of a leaf showing cells with chloroplasts, stomata, xylem and phloem, and gases and water moving through.',
+  draw:drawLeaf,intro:'intro_leaf',
+  bar:function(){return '<div class="msg">Tap the green <b>cells</b> to zoom into a cell, or tap the <b>stomata</b> to zoom into a pore (the blinking boxes). Tap the tubes to learn about xylem and phloem.</div>'},
+  setup:function(svg){addFlows(svg,[
+   {p:'#ll1',k:'light',n:2,d:4},{p:'#ll2',k:'light',n:2,d:4.4},{p:'#ll3',k:'light',n:2,d:4.8},
+   {p:'#lc1',k:'co2',n:2,d:7},{p:'#lc2',k:'co2',n:2,d:7},{p:'#lo1',k:'o2',n:2,d:6},
+   {p:'#lw1',k:'h2o',n:2,d:3.5},{p:'#ls1',k:'sugar',n:2,d:3.5}],11)}},
+ cell:{crumb:'Cell',title:'Zoom 3: inside a leaf cell',scale:'About 0.05 mm (50 µm) long',lvl:'Zoom level 3 of 4',
+  alt:'A plant cell with chloroplasts, with arrows for light, gases, water and sugar.',
+  draw:drawCell,intro:'intro_cell',
+  bar:function(){return '<div class="msg">Tap a <b>chloroplast</b> (the green ovals) to zoom in.</div>'},
+  setup:function(svg){addFlows(svg,[
+   {p:'#cl1',k:'light',n:2,d:4},{p:'#cl2',k:'light',n:2,d:4},{p:'#cc1',k:'co2',n:2,d:5},{p:'#cc2',k:'co2',n:2,d:5},
+   {p:'#co1',k:'o2',n:2,d:5},{p:'#cw1',k:'h2o',n:2,d:7},{p:'#cw2',k:'h2o',n:2,d:7},{p:'#cs1',k:'sugar',n:2,d:6}],12)}},
+ pore:{crumb:'Stomata',title:'Zoom: the pore in the stomata',scale:'Pore about 0.01 mm (10 µm) wide',lvl:'Zoom level 3 of 4',
+  alt:'Top view of two cells around a pore, and a side view showing carbon dioxide going in and oxygen going out when the pore is open.',
+  draw:drawPore,intro:'intro_pore',
+  bar:function(){return '<div class="msg">Press the button to open and close the pore. Watch the side view: gases move only when the pore is open.</div><button class="btn primary" id="poreBtn" type="button">Close the pore</button>'},
+  setup:setupPore},
+ chloro:{crumb:'Chloroplast',title:'Zoom 4: inside a chloroplast',scale:'About 0.005 mm (5 µm) long',lvl:'Zoom level 4 of 4',
+  alt:'A chloroplast with thylakoid stacks and the light-independent reactions in the stroma, with flows of light, water, oxygen, ATP, carbon dioxide and sugar.',
+  draw:drawChloro,intro:null,
+  top:function(){return '<div class="card"><h2>Follow the steps</h2><div class="steps" id="steps">'+
+    '<button type="button" class="btn" data-s="0" aria-pressed="true">All</button>'+[1,2,3,4,5].map(function(n){return '<button type="button" class="btn" data-s="'+n+'" aria-pressed="false">'+n+'</button>'}).join('')+
+    '</div><div class="row"><button class="btn" id="prevStep" type="button">&larr; Previous step</button><button class="btn primary" id="nextStep" type="button">Next step &rarr;</button></div></div>'},
+  bar:function(){return '<div class="msg">Use the steps on the right. Tap the thylakoid stacks, the light-independent reactions, or the stroma to learn about them. The solid orange box shows where the current step happens.</div>'},
+  setup:setupChloro},
+ root:{crumb:'Root',title:'Zoom: inside a root hair cell',scale:'Root hair up to about 1 mm long',lvl:'Zoom level 2 of 3',
+  alt:'A root hair cell in soil taking in water that moves to the xylem, while sugar arrives from the phloem.',
+  draw:drawRoot,intro:'intro_root',
+  bar:function(){return '<div class="msg">Tap any part to learn about it. Follow the arrows: <b>water in</b> and <b>sugar in</b>.</div>'},
+  setup:function(svg){addFlows(svg,[
+   {p:'#rw1',k:'h2o',n:4,d:11},{p:'#rw2',k:'h2o',n:3,d:10},{p:'#rs1',k:'sugar',n:2,d:7},],11)}},
+ stem:{crumb:'Stem',title:'Zoom: inside a stem',scale:'Tubes about 0.05 mm wide',lvl:'Zoom level 2 of 3',
+  alt:'Inside a stem, water moving up in xylem tubes and sugar moving down in phloem tubes, with a stem cross-section inset.',
+  draw:drawStem,intro:'intro_stem',
+  bar:function(){return '<div class="msg">Tap a tube or the cross-section to learn about it.</div>'},
+  setup:function(svg){addFlows(svg,[{p:'#sw1',k:'h2o',n:6,d:8},{p:'#ss1',k:'sugar',n:5,d:9}],12)}}
+};
+
+/* ---------- Plant screen: lens ---------- */
+function setupPlant(svg){
+  svg.style.touchAction='pan-y';
+  addFlows(svg,[
+   {p:'#fl1',k:'light',n:2,d:5},{p:'#fl2',k:'light',n:2,d:5.5},{p:'#fl3',k:'light',n:2,d:5},
+   {p:'#fc1',k:'co2',n:2,d:5},{p:'#fc2',k:'co2',n:2,d:5},
+   {p:'#fo1',k:'o2',n:2,d:5},{p:'#fo2',k:'o2',n:2,d:5},
+   {p:'#fw1',k:'h2o',n:3,d:9},{p:'#fw2',k:'h2o',n:3,d:9},{p:'#fw3',k:'h2o',n:3,d:10},
+   {p:'#fs1',k:'sugar',n:3,d:9},{p:'#fs2',k:'sugar',n:3,d:9}],11);
+
+  var R=66,M=2.1;
+  var lens=svg.querySelector('#lens'),clipC=svg.querySelector('#lensClipC'),ring=svg.querySelector('#lensRing'),ring2=svg.querySelector('#lensRing2'),handle=svg.querySelector('#lensHandle'),use=svg.querySelector('#lensUse');
+  var leaves=Array.prototype.slice.call(svg.querySelectorAll('#world .leaf'));
+  var track=false;
+  function lensOk(){return lensAllowedNow()}
+  var cx=lastLens.x,cy=lastLens.y,region='leaf',dragging=false;
+  var zoomBtn=$('#zoomBtn'),msg=$('#lensMsg');
+
+  function classify(x,y){
+    if(Math.hypot(x-90,y-80)<56)return 'sun';
+    var dp=new DOMPoint(x,y);
+    for(var i=0;i<leaves.length;i++){if(leaves[i].isPointInFill(dp))return 'leaf'}
+    if(y>=176&&y<=372&&Math.abs(x-320)<=18)return 'stem';
+    if(y>372)return (x>190&&x<450&&y<590)?'root':'soil';
+    return 'air';
+  }
+  function regionAt(x,y){
+    var r=classify(x,y);
+    if(r==='air'||r==='soil'){
+      var o=[[14,0],[-14,0],[0,14],[0,-14],[10,10],[-10,-10],[10,-10],[-10,10]];
+      for(var i=0;i<o.length;i++){var q=classify(x+o[i][0],y+o[i][1]);if(q==='leaf'||q==='stem'||q==='root')return q}
+    }
+    return r;
+  }
+  function move(x,y){
+    cx=clamp(x,R*0.7,640-R*0.7);cy=clamp(y,R*0.7,600-R*0.7);
+    lastLens.x=cx;lastLens.y=cy;
+    clipC.setAttribute('cx',cx);clipC.setAttribute('cy',cy);
+    ring.setAttribute('cx',cx);ring.setAttribute('cy',cy);ring2.setAttribute('cx',cx);ring2.setAttribute('cy',cy);
+    use.setAttribute('transform','translate('+cx+' '+cy+') scale('+M+') translate('+(-cx)+' '+(-cy)+')');
+    handle.setAttribute('x1',cx+R*0.72);handle.setAttribute('y1',cy+R*0.72);handle.setAttribute('x2',cx+R*1.22);handle.setAttribute('y2',cy+R*1.22);
+    region=regionAt(cx,cy);
+    if(track&&lensOk()){done('l_'+region);if(region==='leaf'&&stepIdx>=P2LENS)done('p2_lensleaf')}
+    var m=REGION[region];
+    msg.innerHTML='<b>The lens is over: '+m.name+'.</b> '+m.msg;
+    zoomBtn.disabled=!m.go;
+    zoomBtn.textContent=m.go?'Zoom in to the '+m.name.toLowerCase():'Move the lens over a leaf, stem, or root';
+  }
+  function pt(e){var p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(svg.getScreenCTM().inverse())}
+  var downPt=null,touchOnLens=false;
+  function onLens(p){return Math.hypot(p.x-cx,p.y-cy)<=R+16}
+  svg.addEventListener('pointerdown',function(e){
+    if(!lensOk())return;
+    var p=pt(e);
+    if(e.pointerType==='touch'){
+      downPt={x:e.clientX,y:e.clientY};
+      if(onLens(p)){dragging=true;try{svg.setPointerCapture(e.pointerId)}catch(_){}}
+      return;
+    }
+    dragging=true;try{svg.setPointerCapture(e.pointerId)}catch(_){}
+    move(p.x,p.y);
+  });
+  svg.addEventListener('pointermove',function(e){if(!dragging)return;var p=pt(e);move(p.x,p.y)});
+  svg.addEventListener('pointerup',function(e){
+    if(e.pointerType==='touch'&&!dragging&&downPt&&Math.hypot(e.clientX-downPt.x,e.clientY-downPt.y)<10){var p=pt(e);move(p.x,p.y)}
+    dragging=false;downPt=null;
+  });
+  svg.addEventListener('pointercancel',function(){dragging=false;downPt=null});
+  svg.addEventListener('touchstart',function(e){var t=e.touches[0];touchOnLens=!!t&&onLens(pt(t))},{passive:true});
+  svg.addEventListener('touchmove',function(e){if(touchOnLens&&e.cancelable)e.preventDefault()},{passive:false});
+  lens.addEventListener('keydown',function(e){
+    var st=e.shiftKey?36:12;
+    if(e.key==='ArrowLeft'){move(cx-st,cy)}else if(e.key==='ArrowRight'){move(cx+st,cy)}else if(e.key==='ArrowUp'){move(cx,cy-st)}else if(e.key==='ArrowDown'){move(cx,cy+st)}
+    else if(e.key==='Enter'||e.key===' '){var g=REGION[region].go;if(g)goTo(g)}else return;
+    e.preventDefault();
+  });
+  zoomBtn.addEventListener('click',function(){var g=REGION[region].go;if(g)goTo(g)});
+  move(cx,cy);
+  track=true;
+  lensApply=function(){lens.style.display=lensOk()?'':'none'};
+  lensApply();
+
+  var solo=null;
+  function setSolo(k){
+    solo=k;eng.hidden=new Set();
+    if(k){Object.keys(LEG).forEach(function(x){if(x!==k)eng.hidden.add(x)})}
+    applyVis(svg);
+    document.querySelectorAll('.flowBtn').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.k===k?'true':'false')});
+    showInfo(k?'f_'+k:'intro_plant');
+    if(k){done('f_'+k);if(inPart4())done('f2_'+k)}
+  }
+  document.querySelectorAll('.flowBtn').forEach(function(b){b.addEventListener('click',function(){setSolo(solo===b.dataset.k?null:b.dataset.k)})});
+  $('#allBtn').addEventListener('click',function(){setSolo(null)});
+}
+
+/* ---------- Chloroplast stepper ---------- */
+function setupChloro(svg){
+  addFlows(svg,[
+   {p:'#gl1',k:'light',n:2,d:4},{p:'#gl2',k:'light',n:2,d:4},
+   {p:'#gw1',k:'h2o',n:2,d:6,g:'water'},{p:'#go1',k:'o2',n:2,d:6},
+   {p:'#ge1',k:'atp',n:3,d:5,g:'energy'},
+   {p:'#gr1',k:'adp',n:3,d:5,g:'return'},
+   {p:'#gc1',k:'co2',n:2,d:5},{p:'#gs1',k:'sugar',n:2,d:6}],12);
+  var step=0;
+  function setStep(n){
+    step=clamp(n,0,5);
+    if(step===5)done('chloro_step5');
+    if(step>=1&&step<=5)done('cs'+step);
+    if(step===0&&has('cs5'))done('chloro_all');
+    eng.hidden=new Set(ALLG.filter(function(g){return STEPG[step].indexOf(g)<0}));
+    applyVis(svg);
+    var L=svg.querySelector('#zoneL'),C=svg.querySelector('#zoneC');
+    L.classList.toggle('on',step===0||(step>=1&&step<=3));
+    C.classList.toggle('on',step===0||step>=4);
+    document.querySelectorAll('#steps .btn').forEach(function(b){b.setAttribute('aria-pressed',String(+b.dataset.s===step))});
+    $('#prevStep').disabled=step===0;$('#nextStep').disabled=step===5;
+    setInfo(CSTEPS[step].t,CSTEPS[step].h);
+  }
+  document.querySelectorAll('#steps .btn').forEach(function(b){b.addEventListener('click',function(){setStep(+b.dataset.s)})});
+  $('#prevStep').addEventListener('click',function(){setStep(step-1)});
+  $('#nextStep').addEventListener('click',function(){setStep(step+1)});
+  setStep(0);
+}
+
+/* ---------- Info, glossary, speech ---------- */
+function termify(root){
+  var keys=Object.keys(GLOSS).sort(function(a,b){return b.length-a.length}).map(function(k){return k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')});
+  var re=new RegExp('\\b('+keys.join('|')+')(?:s|es)?\\b','gi');
+  var seen={};
+  var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null);
+  var nodes=[];while(w.nextNode())nodes.push(w.currentNode);
+  nodes.forEach(function(n){
+    var txt=n.nodeValue;re.lastIndex=0;if(!re.test(txt))return;re.lastIndex=0;
+    var frag=document.createDocumentFragment(),last=0,m;
+    while((m=re.exec(txt))){
+      var key=m[1].toLowerCase();if(seen[key])continue;seen[key]=1;
+      frag.appendChild(document.createTextNode(txt.slice(last,m.index)));
+      var b=document.createElement('button');b.type='button';b.className='term';b.dataset.t=key;b.textContent=m[0];frag.appendChild(b);
+      last=m.index+m[0].length;
+    }
+    frag.appendChild(document.createTextNode(txt.slice(last)));
+    n.parentNode.replaceChild(frag,n);
+  });
+}
+function setInfo(t,h){$('#infoTitle').textContent=t;var b=$('#infoBody');b.innerHTML=h;termify(b)}
+function showInfo(k){var i=INFO[k];if(i)setInfo(i.t,i.h)}
+function speak(text,btn){
+  try{
+    if(!('speechSynthesis' in window))return;
+    var ss=window.speechSynthesis;
+    if(ss.speaking){ss.cancel();if(btn&&btn.dataset.on==='1'){btn.dataset.on='0';return}}
+    var u=new SpeechSynthesisUtterance(text);u.rate=0.95;ss.speak(u);
+    if(btn)btn.dataset.on='1';
+  }catch(_){}
+}
+function stopSpeech(){try{if('speechSynthesis' in window)window.speechSynthesis.cancel()}catch(_){}}
+document.addEventListener('click',function(e){
+  var t=e.target.closest&&e.target.closest('.term');
+  if(t){var k=t.dataset.t;$('#defT').textContent=t.textContent;$('#defD').textContent=GLOSS[k]||'';$('#defBox').hidden=false}
+});
+$('#defX').addEventListener('click',function(){$('#defBox').hidden=true});
+$('#defSay').addEventListener('click',function(){speak($('#defT').textContent+'. '+$('#defD').textContent)});
+
+
+/* ---------- Adventure themes ---------- */
+var THEMES={
+ bus:{tag:'SHRINK-BUS',word:'Stop',log:'Bus log',
+  titles:{plant:'Stop 1: The whole plant',leaf:'Stop 2: Inside the leaf',pore:'Stop 3: Parking at the stomata',cell:'Stop 3: Inside a leaf cell',chloro:'Stop 4: Inside a chloroplast',root:'Side trip: The roots',stem:'Side trip: The stem highway'},
+  mission:{
+   plant:'Welcome aboard! The Shrink-Bus is parked beside a plant. Tap each item in the list to see what the plant takes in and gives off.',
+   leaf:'The bus has shrunk to fit inside a leaf! Look for the stomata, the tiny doors where gases go in and out.',
+   pore:'Park the bus at the stomata. Press the button to open and close the door. Watch what happens to the gases.',
+   cell:'Shrink again! The bus is now inside one leaf cell. Find the chloroplasts, the tiny green workshops.',
+   chloro:'Final stop: inside a chloroplast! Use the step buttons to watch the work, one step at a time.',
+   root:'Side trip! The bus drives down to the roots to see how the plant drinks.',
+   stem:'Side trip! The bus rides up the stem highway. Watch the water go up and the glucose go down.'}},
+ quest:{tag:'GREEN REALM QUEST',word:'Level',log:'Quest log',
+  titles:{plant:'Level 1: The whole realm',leaf:'Level 2: The Leaf Gates',pore:'Level 3: The gate of the stomata',cell:'Level 3: A living chamber',chloro:'Level 4: The Chloroplast Chamber',root:'Side quest: The roots',stem:'Side quest: The stem roads'},
+  mission:{
+   plant:'Your quest begins at the edge of the Green Realm. Tap each item in the list to scout what enters and leaves.',
+   leaf:'You have entered the Leaf Gates! Find the stomata, the tiny gates of the realm.',
+   pore:'Study the gate. Press the button to open and close it. Watch what passes through.',
+   cell:'You descend into a living chamber. Seek the chloroplasts, where the realm\u2019s power is made.',
+   chloro:'The Chloroplast Chamber! Work through the steps to learn how the realm makes its glucose energy.',
+   root:'A side quest! Travel down to the roots to learn how the realm drinks.',
+   stem:'A side quest! Climb the stem roads. Water travels up and glucose travels down.'}}
+};
+var adv=null;
+function missionCard(id){
+  if(!adv)return '';
+  var T=THEMES[adv];
+  return '<div class="card story"><h2>'+T.log+'</h2><p>'+T.mission[id]+'</p></div>';
+}
+function showStart(){
+  adv=null;prog={};stepIdx=0;stats.first=0;modeQ=false;stack=['plant'];stopSpeech();clearSpot();dockStage(false);clearFlows();$('#guide').hidden=true;$('#qScreen').hidden=true;$('#backBtn').style.visibility='';$('#crumbs').style.visibility='';
+  document.documentElement.removeAttribute('data-adv');
+  $('#startScreen').hidden=false;$('#titleRow').hidden=true;$('#layout').hidden=true;
+  $('#backBtn').hidden=true;$('#crumbs').innerHTML='';$('#defBox').hidden=true;
+  window.scrollTo(0,0);
+}
+function startAdv(k){
+  adv=k;prog={};stepIdx=0;stats.first=0;document.documentElement.dataset.adv=k;$('#guide').hidden=false;$('#qScreen').hidden=true;
+  $('#startScreen').hidden=true;$('#titleRow').hidden=false;$('#layout').hidden=false;
+  $('#advTag').textContent=THEMES[k].tag;
+  stack=['plant'];render('plant');
+}
+
+
+/* ---------- Step-by-step guide ---------- */
+var prog={},stepIdx=0,LENS_IDX=3,lensApply=null;
+function has(k){return !!prog[k]}
+function lensAllowedNow(){return !adv||stepIdx>=LENS_IDX}
+function done0(k){prog[k]=true}
+function done(k){if(prog[k])return;prog[k]=true;refreshGuide()}
+function curScreen(){return stack[stack.length-1]}
+var FLOWS5=['light','co2','h2o','sugar','o2'];
+var PATHS={plant:['plant'],leaf:['plant','leaf'],pore:['plant','leaf','pore'],cell:['plant','leaf','cell'],chloro:['plant','leaf','cell','chloro'],root:['plant','root'],stem:['plant','stem']};
+function flowTarget(prefix){return function(){var k=FLOWS5.filter(function(x){return !has(prefix+x)})[0]||'co2';return '.flowBtn[data-k="'+k+'"]'}}
+function fill(t){
+  var w=adv?THEMES[adv].word:'Stop';
+  return t.replace(/\{P(\d)\}/g,function(_,n){return w+' '+n}).replace(/\{Ws\}/g,w.toLowerCase()+'s');
+}
+var QDATA=[{"img": "A", "labels": [{"t": "What word goes on Line A of your worksheet diagram? Line A points to the flat green part that catches light.", "o": ["leaf", "stem", "roots", "soil"], "a": 0, "ans": "leaf", "h": "Look at the picture. Think about what this part does, then check the Zoom Lab.", "letter": "A"}, {"t": "What word goes on Line B of your worksheet diagram? Line B points to the long part that holds the plant up.", "o": ["roots", "stem", "leaf", "soil"], "a": 1, "ans": "stem", "h": "Look at the picture. Think about what this part does, then check the Zoom Lab.", "letter": "B"}, {"t": "What word goes on Line C of your worksheet diagram? Line C points to the parts under the ground that take in water.", "o": ["soil", "stem", "leaf", "roots"], "a": 3, "ans": "roots", "h": "Look at the picture. Think about what this part does, then check the Zoom Lab.", "letter": "C"}], "qs": [{"t": "Where does carbon dioxide (CO₂) come from?", "o": ["the soil", "the air", "the roots", "the stem"], "a": 1, "h": "Go back to the Zoom Lab and tap Carbon dioxide in the list. Watch where the arrow starts."}, {"t": "The whole plant needs water. Where does the water come from?", "o": ["the air", "the leaf", "the sun", "the soil"], "a": 3, "h": "Tap Water in the Zoom Lab list. Watch where the water arrow starts."}, {"t": "Arrow 4 shows water moving UP the stem through tubes. What are these tubes called?", "o": ["xylem", "phloem", "stomata", "chloroplasts"], "a": 0, "h": "Look at arrow 4 in the picture. Water goes UP. Read about the tubes in the stem."}, {"t": "Arrow 5 shows glucose moving DOWN the stem through tubes. What are these tubes called?", "o": ["xylem", "stomata", "phloem", "roots"], "a": 2, "h": "Look at arrow 5 in the picture. Glucose goes DOWN. Read about the tubes in the stem."}, {"t": "Arrow 2 shows something coming OUT of the leaf into the air. What is it?", "o": ["carbon dioxide", "water", "glucose", "oxygen"], "a": 3, "h": "Look at arrow 2. Tap Oxygen in the Zoom Lab list and watch which way it moves."}]}, {"img": "B", "labels": [{"t": "What word goes on Line A of your worksheet diagram? Line A points to the tiny openings on the bottom of the leaf.", "o": ["stomata", "xylem", "phloem", "chloroplast"], "a": 0, "ans": "stomata", "h": "Look at the picture. Think about what this part does, then check the Zoom Lab.", "letter": "A"}, {"t": "What word goes on Line B of your worksheet diagram? Line B points to the tiny green parts inside the leaf cells.", "o": ["xylem", "chloroplast", "stomata", "phloem"], "a": 1, "ans": "chloroplast", "h": "Look at the picture. Think about what this part does, then check the Zoom Lab.", "letter": "B"}, {"t": "What word goes on Line C of your worksheet diagram? Line C points to the tube that brings water to the leaf.", "o": ["phloem", "stomata", "xylem", "chloroplast"], "a": 2, "ans": "xylem", "h": "Look at the picture. Think about what this part does, then check the Zoom Lab.", "letter": "C"}, {"t": "What word goes on Line D of your worksheet diagram? Line D points to the tube that carries glucose away from the leaf.", "o": ["chloroplast", "xylem", "stomata", "phloem"], "a": 3, "ans": "phloem", "h": "Look at the picture. Think about what this part does, then check the Zoom Lab.", "letter": "D"}], "qs": [{"t": "Arrow 1 shows something going IN through the stomata. What is it?", "o": ["oxygen", "glucose", "water", "carbon dioxide"], "a": 3, "h": "Look at arrow 1. It goes in through the stomata. Tap Carbon dioxide in the Zoom Lab."}, {"t": "The CO₂ goes through the stomata into a leaf cell. Where does it go to be used?", "o": ["the chloroplast", "the xylem", "the phloem", "the stomata"], "a": 0, "h": "The CO₂ goes into a cell, then into a tiny green part. Read about the cell in the Zoom Lab."}, {"t": "Arrow 2 shows something going OUT through the stomata. What is it?", "o": ["glucose", "carbon dioxide", "oxygen", "water"], "a": 2, "h": "Look at arrow 2. It goes out. Tap Oxygen in the Zoom Lab list."}, {"t": "The stomata can close. What happens when the stomata are CLOSED?", "o": ["More CO₂ gets in.", "CO₂ cannot get in.", "More glucose is made.", "The plant makes more oxygen."], "a": 1, "h": "Go back to the stomata screen. Close the pore and watch the arrows."}, {"t": "Arrow 3 shows something coming out of the xylem. What is it?", "o": ["glucose", "water", "oxygen", "carbon dioxide"], "a": 1, "h": "The xylem brings something to the leaf. Read about the xylem in the Zoom Lab."}, {"t": "Arrow 4 shows something going into the phloem. What is it?", "o": ["water", "oxygen", "glucose", "light"], "a": 2, "h": "The phloem carries something away from the leaf. Read about the phloem."}]}, {"img": "C", "labels": [{"t": "What word goes on Line A of your worksheet diagram? Line A points to the big green oval you zoomed into.", "o": ["chloroplast", "stroma", "thylakoid", "stomata"], "a": 0, "ans": "chloroplast", "h": "Look at the picture. Think about what this part does, then check the Zoom Lab.", "letter": "A"}, {"t": "What word goes on Line B of your worksheet diagram? Line B points to the stacks of flat discs inside the chloroplast.", "o": ["stroma", "thylakoid", "chloroplast", "phloem"], "a": 1, "ans": "thylakoid", "h": "Look at the picture. Think about what this part does, then check the Zoom Lab.", "letter": "B"}, {"t": "What word goes on Line C of your worksheet diagram? Line C points to the fluid that fills the chloroplast around the stacks.", "o": ["thylakoid", "chloroplast", "xylem", "stroma"], "a": 3, "ans": "stroma", "h": "Look at the picture. Think about what this part does, then check the Zoom Lab.", "letter": "C"}], "qs": [{"t": "Glucose is made inside a tiny green part of the cell. What is it called?", "o": ["stroma", "xylem", "chloroplast", "stomata"], "a": 2, "h": "Go back to the cell screen. The green ovals are the tiny parts where photosynthesis happens."}, {"t": "Oxygen is a byproduct of photosynthesis. What does “byproduct” mean?", "o": ["the main food the plant makes", "an extra product made along the way", "something the plant takes in", "something that gets stuck in the roots"], "a": 1, "h": "Think: “by” means “along the way.” What kind of product is it?"}, {"t": "Where does the oxygen go after it leaves the leaf?", "o": ["into the soil", "down the phloem", "into the roots", "out into the air"], "a": 3, "h": "Tap Oxygen on the whole-plant screen. Where does the arrow go?"}, {"t": "The light-dependent reactions need light. Where do they happen?", "o": ["stroma", "thylakoid", "xylem", "stomata"], "a": 1, "h": "Look at the words LIGHT-DEPENDENT on the picture. Which part is under them?"}, {"t": "What green pigment (color) in the thylakoids catches light?", "o": ["glucose", "oxygen", "xylem", "chlorophyll"], "a": 3, "h": "Read the thylakoid card in the Zoom Lab. What green pigment does it say catches light?"}, {"t": "Glucose is built during the light-independent reactions. Where do they happen?", "o": ["stroma", "thylakoid", "phloem", "stomata"], "a": 0, "h": "Look at the words LIGHT-INDEPENDENT on the picture. Which part is next to them?"}]}, {"img": null, "labels": [], "qs": [{"t": "Which list shows what goes IN for photosynthesis?", "o": ["glucose, oxygen, light", "water, oxygen, glucose", "light, carbon dioxide, water", "soil, carbon dioxide, glucose"], "a": 2, "h": "Tap Light, Carbon dioxide, and Water in the list. They go IN."}, {"t": "Which two things come OUT of photosynthesis?", "o": ["water and carbon dioxide", "light and oxygen", "soil and glucose", "glucose and oxygen"], "a": 3, "h": "Tap Sugar and Oxygen in the list. They come OUT."}, {"t": "Which sentence is correct?", "o": ["Water and glucose both go up the xylem.", "Water and glucose both go down the phloem.", "Water goes up the phloem. Glucose goes down the xylem.", "Water goes up the xylem. Glucose goes down the phloem."], "a": 3, "h": "Think about the arrows: water goes up from the roots. Glucose goes down from the leaves."}, {"t": "Which sentence is TRUE?", "o": ["Plants get their food from the soil.", "CO₂ comes from the roots.", "Oxygen is a byproduct released into the air.", "Glucose is made in the xylem."], "a": 2, "h": "Plants make glucose in the leaf, not in the soil. Which sentence matches what you saw?"}, {"t": "Which pair is correct?", "o": ["Light-dependent: thylakoid. Light-independent: stroma.", "Light-dependent: stroma. Light-independent: thylakoid.", "Both happen in the xylem.", "Both happen in the roots."], "a": 0, "h": "Look at the chloroplast picture. Which part has the words LIGHT-DEPENDENT?"}, {"t": "Which word equation is correct?", "o": ["glucose + oxygen + light → carbon dioxide + water", "carbon dioxide + water + light → glucose + oxygen", "oxygen + water → glucose + carbon dioxide", "glucose + water → carbon dioxide + light"], "a": 1, "h": "Reactants go IN on the left. Products come OUT on the right. Reactants: light, CO₂, water."}]}];
+var DIAG={"A": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 780 440\"><defs><marker id=\"ar\" viewBox=\"0 0 10 10\" refX=\"8\" refY=\"5\" markerWidth=\"4.2\" markerHeight=\"4.2\" orient=\"auto\"><path d=\"M0 0L10 5L0 10z\" fill=\"#000\"/></marker><pattern id=\"dots\" width=\"20\" height=\"20\" patternUnits=\"userSpaceOnUse\"><circle cx=\"5\" cy=\"6\" r=\"1.6\" fill=\"#999\"/><circle cx=\"15\" cy=\"15\" r=\"1.9\" fill=\"#999\"/></pattern></defs><rect fill=\"#fff\"/><rect x=\"0\" y=\"300\" width=\"780\" height=\"140\" fill=\"#efefef\"/><rect x=\"0\" y=\"300\" width=\"780\" height=\"140\" fill=\"url(#dots)\"/><line x1=\"0\" y1=\"300\" x2=\"780\" y2=\"300\" stroke=\"#000\" stroke-width=\"3\"/><circle cx=\"90\" cy=\"62\" r=\"26\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"3\"/><line x1=\"124.0\" y1=\"62.0\" x2=\"136.0\" y2=\"62.0\" stroke=\"#000\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"119.4\" y1=\"79.0\" x2=\"129.8\" y2=\"85.0\" stroke=\"#000\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"107.0\" y1=\"91.4\" x2=\"113.0\" y2=\"101.8\" stroke=\"#000\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"90.0\" y1=\"96.0\" x2=\"90.0\" y2=\"108.0\" stroke=\"#000\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"73.0\" y1=\"91.4\" x2=\"67.0\" y2=\"101.8\" stroke=\"#000\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"60.6\" y1=\"79.0\" x2=\"50.2\" y2=\"85.0\" stroke=\"#000\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"56.0\" y1=\"62.0\" x2=\"44.0\" y2=\"62.0\" stroke=\"#000\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"60.6\" y1=\"45.0\" x2=\"50.2\" y2=\"39.0\" stroke=\"#000\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"73.0\" y1=\"32.6\" x2=\"67.0\" y2=\"22.2\" stroke=\"#000\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"90.0\" y1=\"28.0\" x2=\"90.0\" y2=\"16.0\" stroke=\"#000\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"107.0\" y1=\"32.6\" x2=\"113.0\" y2=\"22.2\" stroke=\"#000\" stroke-width=\"3\" stroke-linecap=\"round\"/><line x1=\"119.4\" y1=\"45.0\" x2=\"129.8\" y2=\"39.0\" stroke=\"#000\" stroke-width=\"3\" stroke-linecap=\"round\"/><path d=\"M380 300 C382 335 378 370 382 405\" fill=\"none\" stroke=\"#000\" stroke-width=\"6\" stroke-linecap=\"round\"/><path d=\"M381 325 C350 340 320 360 290 395\" fill=\"none\" stroke=\"#000\" stroke-width=\"5\" stroke-linecap=\"round\"/><path d=\"M381 345 C412 358 440 378 462 408\" fill=\"none\" stroke=\"#000\" stroke-width=\"5\" stroke-linecap=\"round\"/><path d=\"M380 375 C360 390 345 410 332 428\" fill=\"none\" stroke=\"#000\" stroke-width=\"4\" stroke-linecap=\"round\"/><path d=\"M381 380 C402 395 415 410 424 428\" fill=\"none\" stroke=\"#000\" stroke-width=\"4\" stroke-linecap=\"round\"/><path d=\"M380 300 L380 125\" stroke=\"#000\" stroke-width=\"18\" stroke-linecap=\"round\" fill=\"none\"/><path d=\"M380 300 L380 125\" stroke=\"#fff\" stroke-width=\"11\" stroke-linecap=\"round\" fill=\"none\"/><path d=\"M378 128 C350 92 355 50 400 30 C432 62 424 108 378 128 Z\" fill=\"#d9d9d9\" stroke=\"#000\" stroke-width=\"3\"/><path d=\"M378 128 C382 95 392 62 400 36\" fill=\"none\" stroke=\"#000\" stroke-width=\"2\"/><path d=\"M384 182 C420 148 480 148 530 175 C490 212 425 215 384 182 Z\" fill=\"#d9d9d9\" stroke=\"#000\" stroke-width=\"3\"/><path d=\"M384 182 C430 172 480 168 524 175\" fill=\"none\" stroke=\"#000\" stroke-width=\"2\"/><path d=\"M376 218 C340 188 270 188 225 215 C262 248 335 250 376 218 Z\" fill=\"#d9d9d9\" stroke=\"#000\" stroke-width=\"3\"/><path d=\"M376 218 C335 210 270 208 232 215\" fill=\"none\" stroke=\"#000\" stroke-width=\"2\"/><text x=\"14\" y=\"28\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"19\" font-weight=\"700\" text-anchor=\"start\" fill=\"#000\">AIR</text><text x=\"14\" y=\"326\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"19\" font-weight=\"700\" text-anchor=\"start\" fill=\"#000\">SOIL</text><path d=\"M124 72 L346 104\" fill=\"none\" stroke=\"#000\" stroke-width=\"3.5\" stroke-linecap=\"round\" marker-end=\"url(#ar)\"/><text x=\"205\" y=\"70\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"21\" font-weight=\"700\" text-anchor=\"start\" fill=\"#000\">LIGHT</text><path d=\"M196 272 L288 249\" fill=\"none\" stroke=\"#000\" stroke-width=\"3.5\" stroke-linecap=\"round\" marker-end=\"url(#ar)\"/><path d=\"M452 150 L548 104\" fill=\"none\" stroke=\"#000\" stroke-width=\"3.5\" stroke-linecap=\"round\" marker-end=\"url(#ar)\"/><path d=\"M562 394 L470 404\" fill=\"none\" stroke=\"#000\" stroke-width=\"3.5\" stroke-linecap=\"round\" marker-end=\"url(#ar)\"/><path d=\"M350 292 L350 232\" fill=\"none\" stroke=\"#000\" stroke-width=\"3.5\" stroke-linecap=\"round\" marker-end=\"url(#ar)\"/><path d=\"M412 232 L412 292\" fill=\"none\" stroke=\"#000\" stroke-width=\"3.5\" stroke-linecap=\"round\" marker-end=\"url(#ar)\"/><line x1=\"406\" y1=\"68\" x2=\"560\" y2=\"44\" stroke=\"#000\" stroke-width=\"1.6\"/><circle cx=\"406\" cy=\"68\" r=\"3.6\" fill=\"#000\"/><g class=\"bl\" data-l=\"A\"><line x1=\"562\" y1=\"46\" x2=\"770\" y2=\"46\" stroke=\"#000\" stroke-width=\"2\"/><rect x=\"562\" y=\"16\" width=\"28\" height=\"28\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"2.5\"/><text x=\"576\" y=\"37\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"21\" font-weight=\"700\" text-anchor=\"middle\">A</text></g><line x1=\"374\" y1=\"155\" x2=\"212\" y2=\"152\" stroke=\"#000\" stroke-width=\"1.6\"/><circle cx=\"374\" cy=\"155\" r=\"3.6\" fill=\"#000\"/><g class=\"bl\" data-l=\"B\"><line x1=\"20\" y1=\"156\" x2=\"205\" y2=\"156\" stroke=\"#000\" stroke-width=\"2\"/><rect x=\"20\" y=\"126\" width=\"28\" height=\"28\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"2.5\"/><text x=\"34\" y=\"147\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"21\" font-weight=\"700\" text-anchor=\"middle\">B</text></g><line x1=\"335\" y1=\"352\" x2=\"208\" y2=\"420\" stroke=\"#000\" stroke-width=\"1.6\"/><circle cx=\"335\" cy=\"352\" r=\"3.6\" fill=\"#000\"/><g class=\"bl\" data-l=\"C\"><line x1=\"20\" y1=\"428\" x2=\"205\" y2=\"428\" stroke=\"#000\" stroke-width=\"2\"/><rect x=\"20\" y=\"398\" width=\"28\" height=\"28\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"2.5\"/><text x=\"34\" y=\"419\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"21\" font-weight=\"700\" text-anchor=\"middle\">C</text></g><circle cx=\"232\" cy=\"236\" r=\"17\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"3\"/><text x=\"232\" y=\"244\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"23\" font-weight=\"700\" text-anchor=\"middle\">1</text><circle cx=\"525\" cy=\"148\" r=\"17\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"3\"/><text x=\"525\" y=\"156\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"23\" font-weight=\"700\" text-anchor=\"middle\">2</text><circle cx=\"516\" cy=\"372\" r=\"17\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"3\"/><text x=\"516\" y=\"380\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"23\" font-weight=\"700\" text-anchor=\"middle\">3</text><circle cx=\"322\" cy=\"278\" r=\"17\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"3\"/><text x=\"322\" y=\"286\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"23\" font-weight=\"700\" text-anchor=\"middle\">4</text><circle cx=\"444\" cy=\"262\" r=\"17\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"3\"/><text x=\"444\" y=\"270\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"23\" font-weight=\"700\" text-anchor=\"middle\">5</text></svg>", "B": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 780 440\"><defs><marker id=\"ar\" viewBox=\"0 0 10 10\" refX=\"8\" refY=\"5\" markerWidth=\"4.2\" markerHeight=\"4.2\" orient=\"auto\"><path d=\"M0 0L10 5L0 10z\" fill=\"#000\"/></marker><pattern id=\"dots\" width=\"20\" height=\"20\" patternUnits=\"userSpaceOnUse\"><circle cx=\"5\" cy=\"6\" r=\"1.6\" fill=\"#999\"/><circle cx=\"15\" cy=\"15\" r=\"1.9\" fill=\"#999\"/></pattern></defs><rect fill=\"#fff\"/><rect x=\"40\" y=\"40\" width=\"520\" height=\"32\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"2.5\"/><line x1=\"92\" y1=\"40\" x2=\"92\" y2=\"72\" stroke=\"#555\" stroke-width=\"1.3\"/><line x1=\"144\" y1=\"40\" x2=\"144\" y2=\"72\" stroke=\"#555\" stroke-width=\"1.3\"/><line x1=\"196\" y1=\"40\" x2=\"196\" y2=\"72\" stroke=\"#555\" stroke-width=\"1.3\"/><line x1=\"248\" y1=\"40\" x2=\"248\" y2=\"72\" stroke=\"#555\" stroke-width=\"1.3\"/><line x1=\"300\" y1=\"40\" x2=\"300\" y2=\"72\" stroke=\"#555\" stroke-width=\"1.3\"/><line x1=\"352\" y1=\"40\" x2=\"352\" y2=\"72\" stroke=\"#555\" stroke-width=\"1.3\"/><line x1=\"404\" y1=\"40\" x2=\"404\" y2=\"72\" stroke=\"#555\" stroke-width=\"1.3\"/><line x1=\"456\" y1=\"40\" x2=\"456\" y2=\"72\" stroke=\"#555\" stroke-width=\"1.3\"/><line x1=\"508\" y1=\"40\" x2=\"508\" y2=\"72\" stroke=\"#555\" stroke-width=\"1.3\"/><rect x=\"42\" y=\"76\" width=\"36\" height=\"86\" rx=\"10\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"2\"/><ellipse cx=\"53\" cy=\"95\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"67\" cy=\"120\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"53\" cy=\"145\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><rect x=\"82\" y=\"76\" width=\"36\" height=\"86\" rx=\"10\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"2\"/><ellipse cx=\"93\" cy=\"95\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"107\" cy=\"120\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"93\" cy=\"145\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><rect x=\"122\" y=\"76\" width=\"36\" height=\"86\" rx=\"10\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"2\"/><ellipse cx=\"133\" cy=\"95\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"147\" cy=\"120\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"133\" cy=\"145\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><rect x=\"162\" y=\"76\" width=\"36\" height=\"86\" rx=\"10\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"2\"/><ellipse cx=\"173\" cy=\"95\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"187\" cy=\"120\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"173\" cy=\"145\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><rect x=\"202\" y=\"76\" width=\"36\" height=\"86\" rx=\"10\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"2\"/><ellipse cx=\"213\" cy=\"95\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"227\" cy=\"120\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"213\" cy=\"145\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><rect x=\"242\" y=\"76\" width=\"36\" height=\"86\" rx=\"10\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"2\"/><ellipse cx=\"253\" cy=\"95\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"267\" cy=\"120\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"253\" cy=\"145\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><rect x=\"282\" y=\"76\" width=\"36\" height=\"86\" rx=\"10\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"2\"/><ellipse cx=\"293\" cy=\"95\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"307\" cy=\"120\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"293\" cy=\"145\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><rect x=\"322\" y=\"76\" width=\"36\" height=\"86\" rx=\"10\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"2\"/><ellipse cx=\"333\" cy=\"95\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"347\" cy=\"120\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"333\" cy=\"145\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><rect x=\"362\" y=\"76\" width=\"36\" height=\"86\" rx=\"10\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"2\"/><ellipse cx=\"373\" cy=\"95\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"387\" cy=\"120\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"373\" cy=\"145\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><rect x=\"402\" y=\"76\" width=\"36\" height=\"86\" rx=\"10\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"2\"/><ellipse cx=\"413\" cy=\"95\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"427\" cy=\"120\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"413\" cy=\"145\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><rect x=\"442\" y=\"76\" width=\"36\" height=\"86\" rx=\"10\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"2\"/><ellipse cx=\"453\" cy=\"95\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"467\" cy=\"120\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"453\" cy=\"145\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><rect x=\"482\" y=\"76\" width=\"36\" height=\"86\" rx=\"10\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"2\"/><ellipse cx=\"493\" cy=\"95\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"507\" cy=\"120\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"493\" cy=\"145\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><rect x=\"522\" y=\"76\" width=\"36\" height=\"86\" rx=\"10\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"2\"/><ellipse cx=\"533\" cy=\"95\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"547\" cy=\"120\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"533\" cy=\"145\" rx=\"7\" ry=\"4.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"60\" cy=\"190\" rx=\"24\" ry=\"18\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"1.8\"/><ellipse cx=\"54\" cy=\"188\" rx=\"5\" ry=\"3.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"108\" cy=\"190\" rx=\"24\" ry=\"18\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"1.8\"/><ellipse cx=\"102\" cy=\"188\" rx=\"5\" ry=\"3.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"246\" cy=\"190\" rx=\"24\" ry=\"18\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"1.8\"/><ellipse cx=\"240\" cy=\"188\" rx=\"5\" ry=\"3.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"372\" cy=\"190\" rx=\"24\" ry=\"18\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"1.8\"/><ellipse cx=\"366\" cy=\"188\" rx=\"5\" ry=\"3.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"420\" cy=\"190\" rx=\"24\" ry=\"18\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"1.8\"/><ellipse cx=\"414\" cy=\"188\" rx=\"5\" ry=\"3.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"468\" cy=\"190\" rx=\"24\" ry=\"18\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"1.8\"/><ellipse cx=\"462\" cy=\"188\" rx=\"5\" ry=\"3.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"516\" cy=\"190\" rx=\"24\" ry=\"18\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"1.8\"/><ellipse cx=\"510\" cy=\"188\" rx=\"5\" ry=\"3.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"84\" cy=\"232\" rx=\"24\" ry=\"18\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"1.8\"/><ellipse cx=\"78\" cy=\"230\" rx=\"5\" ry=\"3.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"132\" cy=\"232\" rx=\"24\" ry=\"18\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"1.8\"/><ellipse cx=\"126\" cy=\"230\" rx=\"5\" ry=\"3.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"356\" cy=\"232\" rx=\"24\" ry=\"18\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"1.8\"/><ellipse cx=\"350\" cy=\"230\" rx=\"5\" ry=\"3.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"404\" cy=\"232\" rx=\"24\" ry=\"18\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"1.8\"/><ellipse cx=\"398\" cy=\"230\" rx=\"5\" ry=\"3.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"452\" cy=\"232\" rx=\"24\" ry=\"18\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"1.8\"/><ellipse cx=\"446\" cy=\"230\" rx=\"5\" ry=\"3.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"500\" cy=\"232\" rx=\"24\" ry=\"18\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"1.8\"/><ellipse cx=\"494\" cy=\"230\" rx=\"5\" ry=\"3.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"540\" cy=\"232\" rx=\"24\" ry=\"18\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"1.8\"/><ellipse cx=\"534\" cy=\"230\" rx=\"5\" ry=\"3.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><rect x=\"40\" y=\"255\" width=\"520\" height=\"32\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"2.5\"/><line x1=\"92\" y1=\"255\" x2=\"92\" y2=\"287\" stroke=\"#555\" stroke-width=\"1.3\"/><line x1=\"144\" y1=\"255\" x2=\"144\" y2=\"287\" stroke=\"#555\" stroke-width=\"1.3\"/><line x1=\"196\" y1=\"255\" x2=\"196\" y2=\"287\" stroke=\"#555\" stroke-width=\"1.3\"/><line x1=\"248\" y1=\"255\" x2=\"248\" y2=\"287\" stroke=\"#555\" stroke-width=\"1.3\"/><line x1=\"300\" y1=\"255\" x2=\"300\" y2=\"287\" stroke=\"#555\" stroke-width=\"1.3\"/><line x1=\"352\" y1=\"255\" x2=\"352\" y2=\"287\" stroke=\"#555\" stroke-width=\"1.3\"/><line x1=\"404\" y1=\"255\" x2=\"404\" y2=\"287\" stroke=\"#555\" stroke-width=\"1.3\"/><line x1=\"456\" y1=\"255\" x2=\"456\" y2=\"287\" stroke=\"#555\" stroke-width=\"1.3\"/><line x1=\"508\" y1=\"255\" x2=\"508\" y2=\"287\" stroke=\"#555\" stroke-width=\"1.3\"/><rect x=\"175\" y=\"254\" width=\"20\" height=\"35\" fill=\"#fff\"/><ellipse cx=\"164\" cy=\"271\" rx=\"11\" ry=\"16\" fill=\"#ddd\" stroke=\"#000\" stroke-width=\"2.5\"/><ellipse cx=\"164\" cy=\"271\" rx=\"5\" ry=\"3.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"206\" cy=\"271\" rx=\"11\" ry=\"16\" fill=\"#ddd\" stroke=\"#000\" stroke-width=\"2.5\"/><ellipse cx=\"206\" cy=\"271\" rx=\"5\" ry=\"3.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><rect x=\"410\" y=\"254\" width=\"20\" height=\"35\" fill=\"#fff\"/><ellipse cx=\"399\" cy=\"271\" rx=\"11\" ry=\"16\" fill=\"#ddd\" stroke=\"#000\" stroke-width=\"2.5\"/><ellipse cx=\"399\" cy=\"271\" rx=\"5\" ry=\"3.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"441\" cy=\"271\" rx=\"11\" ry=\"16\" fill=\"#ddd\" stroke=\"#000\" stroke-width=\"2.5\"/><ellipse cx=\"441\" cy=\"271\" rx=\"5\" ry=\"3.5\" fill=\"#aaa\" stroke=\"#000\" stroke-width=\"1.4\"/><circle cx=\"300\" cy=\"208\" r=\"30\" fill=\"#f2f2f2\" stroke=\"#000\" stroke-width=\"3\"/><circle cx=\"291\" cy=\"198\" r=\"8\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"3\"/><circle cx=\"309\" cy=\"196\" r=\"8\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"3\"/><circle cx=\"290\" cy=\"222\" r=\"5\" fill=\"#999\" stroke=\"#000\" stroke-width=\"1.6\"/><circle cx=\"300\" cy=\"228\" r=\"5\" fill=\"#999\" stroke=\"#000\" stroke-width=\"1.6\"/><circle cx=\"310\" cy=\"222\" r=\"5\" fill=\"#999\" stroke=\"#000\" stroke-width=\"1.6\"/><text x=\"14\" y=\"312\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"17\" font-weight=\"700\" text-anchor=\"start\" fill=\"#000\">OUTSIDE AIR</text><path d=\"M100 6 L108 62\" fill=\"none\" stroke=\"#000\" stroke-width=\"3\" stroke-linecap=\"round\" marker-end=\"url(#ar)\"/><path d=\"M300 6 L308 62\" fill=\"none\" stroke=\"#000\" stroke-width=\"3\" stroke-linecap=\"round\" marker-end=\"url(#ar)\"/><path d=\"M500 6 L508 62\" fill=\"none\" stroke=\"#000\" stroke-width=\"3\" stroke-linecap=\"round\" marker-end=\"url(#ar)\"/><text x=\"318\" y=\"26\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"19\" font-weight=\"700\" text-anchor=\"start\" fill=\"#000\">LIGHT</text><path d=\"M299 178 C300 152 296 140 294 128\" fill=\"none\" stroke=\"#000\" stroke-width=\"3\" stroke-linecap=\"round\" marker-end=\"url(#ar)\"/><path d=\"M338 135 C350 175 335 205 319 226\" fill=\"none\" stroke=\"#000\" stroke-width=\"3\" stroke-linecap=\"round\" marker-end=\"url(#ar)\"/><path d=\"M179 402 L179 292 C179 255 172 205 170 152\" fill=\"none\" stroke=\"#000\" stroke-width=\"3.5\" stroke-linecap=\"round\" marker-end=\"url(#ar)\"/><path d=\"M213 132 C212 190 193 235 191 264 L191 402\" fill=\"none\" stroke=\"#000\" stroke-width=\"3.5\" stroke-linecap=\"round\" marker-end=\"url(#ar)\"/><line x1=\"181\" y1=\"289\" x2=\"162\" y2=\"350\" stroke=\"#000\" stroke-width=\"1.6\"/><circle cx=\"181\" cy=\"289\" r=\"3.6\" fill=\"#000\"/><g class=\"bl\" data-l=\"A\"><line x1=\"10\" y1=\"354\" x2=\"160\" y2=\"354\" stroke=\"#000\" stroke-width=\"2\"/><rect x=\"10\" y=\"324\" width=\"28\" height=\"28\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"2.5\"/><text x=\"24\" y=\"345\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"21\" font-weight=\"700\" text-anchor=\"middle\">A</text></g><line x1=\"541\" y1=\"97\" x2=\"583\" y2=\"98\" stroke=\"#000\" stroke-width=\"1.6\"/><circle cx=\"541\" cy=\"97\" r=\"3.6\" fill=\"#000\"/><g class=\"bl\" data-l=\"B\"><line x1=\"585\" y1=\"104\" x2=\"775\" y2=\"104\" stroke=\"#000\" stroke-width=\"2\"/><rect x=\"585\" y=\"74\" width=\"28\" height=\"28\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"2.5\"/><text x=\"599\" y=\"95\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"21\" font-weight=\"700\" text-anchor=\"middle\">B</text></g><line x1=\"317\" y1=\"196\" x2=\"583\" y2=\"190\" stroke=\"#000\" stroke-width=\"1.6\"/><circle cx=\"317\" cy=\"196\" r=\"3.6\" fill=\"#000\"/><g class=\"bl\" data-l=\"C\"><line x1=\"585\" y1=\"196\" x2=\"775\" y2=\"196\" stroke=\"#000\" stroke-width=\"2\"/><rect x=\"585\" y=\"166\" width=\"28\" height=\"28\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"2.5\"/><text x=\"599\" y=\"187\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"21\" font-weight=\"700\" text-anchor=\"middle\">C</text></g><line x1=\"314\" y1=\"224\" x2=\"583\" y2=\"246\" stroke=\"#000\" stroke-width=\"1.6\"/><circle cx=\"314\" cy=\"224\" r=\"3.6\" fill=\"#000\"/><g class=\"bl\" data-l=\"D\"><line x1=\"585\" y1=\"252\" x2=\"775\" y2=\"252\" stroke=\"#000\" stroke-width=\"2\"/><rect x=\"585\" y=\"222\" width=\"28\" height=\"28\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"2.5\"/><text x=\"599\" y=\"243\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"21\" font-weight=\"700\" text-anchor=\"middle\">D</text></g><circle cx=\"136\" cy=\"396\" r=\"17\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"3\"/><text x=\"136\" y=\"404\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"23\" font-weight=\"700\" text-anchor=\"middle\">1</text><circle cx=\"232\" cy=\"396\" r=\"17\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"3\"/><text x=\"232\" y=\"404\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"23\" font-weight=\"700\" text-anchor=\"middle\">2</text><line x1=\"297\" y1=\"140\" x2=\"330\" y2=\"104\" stroke=\"#000\" stroke-width=\"1.6\"/><circle cx=\"297\" cy=\"140\" r=\"3.6\" fill=\"#000\"/><circle cx=\"330\" cy=\"104\" r=\"17\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"3\"/><text x=\"330\" y=\"112\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"23\" font-weight=\"700\" text-anchor=\"middle\">3</text><line x1=\"344\" y1=\"172\" x2=\"392\" y2=\"150\" stroke=\"#000\" stroke-width=\"1.6\"/><circle cx=\"344\" cy=\"172\" r=\"3.6\" fill=\"#000\"/><circle cx=\"392\" cy=\"150\" r=\"17\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"3\"/><text x=\"392\" y=\"158\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"23\" font-weight=\"700\" text-anchor=\"middle\">4</text></svg>", "C": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 780 440\"><defs><marker id=\"ar\" viewBox=\"0 0 10 10\" refX=\"8\" refY=\"5\" markerWidth=\"4.2\" markerHeight=\"4.2\" orient=\"auto\"><path d=\"M0 0L10 5L0 10z\" fill=\"#000\"/></marker><pattern id=\"dots\" width=\"20\" height=\"20\" patternUnits=\"userSpaceOnUse\"><circle cx=\"5\" cy=\"6\" r=\"1.6\" fill=\"#999\"/><circle cx=\"15\" cy=\"15\" r=\"1.9\" fill=\"#999\"/></pattern></defs><rect fill=\"#fff\"/><rect x=\"10\" y=\"70\" width=\"150\" height=\"330\" rx=\"30\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"6\"/><ellipse cx=\"36\" cy=\"205\" rx=\"20\" ry=\"12\" fill=\"#bbb\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"36\" cy=\"310\" rx=\"20\" ry=\"12\" fill=\"#bbb\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"134\" cy=\"150\" rx=\"20\" ry=\"12\" fill=\"#bbb\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"134\" cy=\"330\" rx=\"20\" ry=\"12\" fill=\"#bbb\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"124\" cy=\"375\" rx=\"20\" ry=\"12\" fill=\"#bbb\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"136\" cy=\"240\" rx=\"22\" ry=\"13\" fill=\"#999\" stroke=\"#000\" stroke-width=\"1.4\"/><ellipse cx=\"136\" cy=\"240\" rx=\"22\" ry=\"13\" fill=\"none\" stroke=\"#000\" stroke-width=\"3.5\"/><text x=\"85\" y=\"56\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"17\" font-weight=\"700\" text-anchor=\"middle\" fill=\"#000\">CELL</text><line x1=\"150\" y1=\"230\" x2=\"288\" y2=\"150\" stroke=\"#000\" stroke-width=\"2\" stroke-dasharray=\"7 6\"/><line x1=\"150\" y1=\"252\" x2=\"288\" y2=\"322\" stroke=\"#000\" stroke-width=\"2\" stroke-dasharray=\"7 6\"/><text x=\"188\" y=\"222\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"15\" font-weight=\"700\" text-anchor=\"middle\" fill=\"#000\">ZOOM</text><text x=\"188\" y=\"240\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"15\" font-weight=\"700\" text-anchor=\"middle\" fill=\"#000\">IN</text><ellipse cx=\"420\" cy=\"235\" rx=\"165\" ry=\"145\" fill=\"#f4f4f4\" stroke=\"#000\" stroke-width=\"5\"/><ellipse cx=\"420\" cy=\"235\" rx=\"156\" ry=\"136\" fill=\"none\" stroke=\"#000\" stroke-width=\"1.8\"/><rect x=\"310\" y=\"140\" width=\"70\" height=\"12\" rx=\"6\" fill=\"#bbb\" stroke=\"#000\" stroke-width=\"2\"/><rect x=\"310\" y=\"156\" width=\"70\" height=\"12\" rx=\"6\" fill=\"#bbb\" stroke=\"#000\" stroke-width=\"2\"/><rect x=\"310\" y=\"172\" width=\"70\" height=\"12\" rx=\"6\" fill=\"#bbb\" stroke=\"#000\" stroke-width=\"2\"/><rect x=\"310\" y=\"188\" width=\"70\" height=\"12\" rx=\"6\" fill=\"#bbb\" stroke=\"#000\" stroke-width=\"2\"/><rect x=\"315\" y=\"232\" width=\"70\" height=\"12\" rx=\"6\" fill=\"#bbb\" stroke=\"#000\" stroke-width=\"2\"/><rect x=\"315\" y=\"248\" width=\"70\" height=\"12\" rx=\"6\" fill=\"#bbb\" stroke=\"#000\" stroke-width=\"2\"/><rect x=\"315\" y=\"264\" width=\"70\" height=\"12\" rx=\"6\" fill=\"#bbb\" stroke=\"#000\" stroke-width=\"2\"/><rect x=\"315\" y=\"280\" width=\"70\" height=\"12\" rx=\"6\" fill=\"#bbb\" stroke=\"#000\" stroke-width=\"2\"/><rect x=\"395\" y=\"185\" width=\"70\" height=\"12\" rx=\"6\" fill=\"#bbb\" stroke=\"#000\" stroke-width=\"2\"/><rect x=\"395\" y=\"201\" width=\"70\" height=\"12\" rx=\"6\" fill=\"#bbb\" stroke=\"#000\" stroke-width=\"2\"/><rect x=\"395\" y=\"217\" width=\"70\" height=\"12\" rx=\"6\" fill=\"#bbb\" stroke=\"#000\" stroke-width=\"2\"/><rect x=\"395\" y=\"233\" width=\"70\" height=\"12\" rx=\"6\" fill=\"#bbb\" stroke=\"#000\" stroke-width=\"2\"/><path d=\"M430 20 L430 100\" fill=\"none\" stroke=\"#000\" stroke-width=\"3.5\" stroke-linecap=\"round\" marker-end=\"url(#ar)\"/><text x=\"445\" y=\"48\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"19\" font-weight=\"700\" text-anchor=\"start\" fill=\"#000\">LIGHT</text><path d=\"M632 50 L538 128\" fill=\"none\" stroke=\"#000\" stroke-width=\"3.5\" stroke-linecap=\"round\" marker-end=\"url(#ar)\"/><path d=\"M335 140 C322 112 308 90 294 70\" fill=\"none\" stroke=\"#000\" stroke-width=\"3.5\" stroke-linecap=\"round\" marker-end=\"url(#ar)\"/><path d=\"M395 428 L364 304\" fill=\"none\" stroke=\"#000\" stroke-width=\"3.5\" stroke-linecap=\"round\" marker-end=\"url(#ar)\"/><path d=\"M515 300 L596 372\" fill=\"none\" stroke=\"#000\" stroke-width=\"3.5\" stroke-linecap=\"round\" marker-end=\"url(#ar)\"/><text x=\"345\" y=\"132\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"13\" font-weight=\"700\" text-anchor=\"start\" fill=\"#000\">LIGHT-DEPENDENT</text><text x=\"522\" y=\"226\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"13\" font-weight=\"700\" text-anchor=\"middle\" fill=\"#000\">LIGHT-</text><text x=\"522\" y=\"242\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"13\" font-weight=\"700\" text-anchor=\"middle\" fill=\"#000\">INDEPENDENT</text><line x1=\"582\" y1=\"207\" x2=\"602\" y2=\"208\" stroke=\"#000\" stroke-width=\"1.6\"/><circle cx=\"582\" cy=\"207\" r=\"3.6\" fill=\"#000\"/><g class=\"bl\" data-l=\"A\"><line x1=\"602\" y1=\"212\" x2=\"774\" y2=\"212\" stroke=\"#000\" stroke-width=\"2\"/><rect x=\"602\" y=\"182\" width=\"28\" height=\"28\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"2.5\"/><text x=\"616\" y=\"203\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"21\" font-weight=\"700\" text-anchor=\"middle\">A</text></g><line x1=\"520\" y1=\"272\" x2=\"602\" y2=\"274\" stroke=\"#000\" stroke-width=\"1.6\"/><circle cx=\"520\" cy=\"272\" r=\"3.6\" fill=\"#000\"/><g class=\"bl\" data-l=\"C\"><line x1=\"602\" y1=\"278\" x2=\"774\" y2=\"278\" stroke=\"#000\" stroke-width=\"2\"/><rect x=\"602\" y=\"248\" width=\"28\" height=\"28\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"2.5\"/><text x=\"616\" y=\"269\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"21\" font-weight=\"700\" text-anchor=\"middle\">C</text></g><line x1=\"320\" y1=\"290\" x2=\"172\" y2=\"424\" stroke=\"#000\" stroke-width=\"1.6\"/><circle cx=\"320\" cy=\"290\" r=\"3.6\" fill=\"#000\"/><g class=\"bl\" data-l=\"B\"><line x1=\"8\" y1=\"432\" x2=\"172\" y2=\"432\" stroke=\"#000\" stroke-width=\"2\"/><rect x=\"8\" y=\"402\" width=\"28\" height=\"28\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"2.5\"/><text x=\"22\" y=\"423\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"21\" font-weight=\"700\" text-anchor=\"middle\">B</text></g><circle cx=\"672\" cy=\"36\" r=\"17\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"3\"/><text x=\"672\" y=\"44\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"23\" font-weight=\"700\" text-anchor=\"middle\">1</text><circle cx=\"430\" cy=\"396\" r=\"17\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"3\"/><text x=\"430\" y=\"404\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"23\" font-weight=\"700\" text-anchor=\"middle\">2</text><circle cx=\"268\" cy=\"96\" r=\"17\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"3\"/><text x=\"268\" y=\"104\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"23\" font-weight=\"700\" text-anchor=\"middle\">3</text><circle cx=\"600\" cy=\"334\" r=\"17\" fill=\"#fff\" stroke=\"#000\" stroke-width=\"3\"/><text x=\"600\" y=\"342\" font-family=\"DejaVu Sans, Verdana, Arial, sans-serif\" font-size=\"23\" font-weight=\"700\" text-anchor=\"middle\">4</text></svg>"};
+var stats={first:0,total:0};
+var FLK=[['co2','Carbon dioxide'],['light','Light'],['h2o','Water'],['sugar','Sugar'],['o2','Oxygen']];
+function flowStepsP1(){
+  return FLK.map(function(f,i){
+    var k=f[0];
+    return {p:'{P1}: The whole plant',sc:'plant',
+      t:i===0?'Tap \u201CCarbon dioxide\u201D in the list on the right. Watch the arrow.':'Tap \u201C'+f[1]+'\u201D in the list. Watch the arrow.',
+      w:'Find the list called \u201CTap one to follow it.\u201D Tap the button that says '+f[1]+'.',
+      d:function(){return has('f_'+k)},tg:'.flowBtn[data-k="'+k+'"]'};
+  });
+}
+function flowStepsP4(){
+  return FLK.map(function(f,i){
+    var k=f[0];
+    var o={p:'{P4}: Put it together',sc:'plant',
+      t:'Tap \u201C'+f[1]+'\u201D in the list one more time.',
+      w:'Find the button that says '+f[1]+' in the list on the right.',
+      d:function(){return has('f2_'+k)},tg:'.flowBtn[data-k="'+k+'"]'};
+    if(i===0)o.id='p4flows';
+    return o;
+  });
+}
+var Z1=[
+ {p:'Get ready',sc:'plant',t:'Welcome! Get your worksheet and a pencil. You will do ONE step at a time. The Zoom Lab will not let you skip ahead. You will answer the worksheet questions here too. Press Next when you are ready.',m:1}
+].concat(flowStepsP1(),[
+ {id:'lens',p:'{P1}: The whole plant',sc:'plant',t:'Here is your magnifying lens! Drag it onto the leaf.',w:'The lens is the big circle. Touch it and drag it onto a leaf. The message under the picture says what it is over.',d:function(){return has('l_leaf')},tg:'#lens'},
+ {p:'{P1}: The whole plant',sc:'plant',t:'Now drag the lens onto the stem.',w:'The stem is the long part in the middle of the plant.',d:function(){return has('l_stem')},tg:'#lens'},
+ {p:'{P1}: The whole plant',sc:'plant',t:'Now drag the lens onto the roots.',w:'The roots are under the ground.',d:function(){return has('l_root')},tg:'#lens'}
+]);
+var Z2=[
+ {id:'p2lens',p:'{P2}: The leaf and stomata',sc:'plant',t:'Drag the lens back onto a leaf.',w:'The message under the picture will say \u201CLeaf.\u201D',d:function(){return has('p2_lensleaf')},tg:'#lens'},
+ {p:'{P2}: The leaf and stomata',sc:'plant',t:'Press \u201CZoom in.\u201D',w:'The big button is under the picture.',d:function(){return has('visit_leaf')},tg:'#zoomBtn'},
+ {p:'{P2}: The leaf and stomata',sc:'leaf',t:'Watch the arrows go in and out of the leaf. Which arrow carries CO\u2082 in?',w:'Look at the arrows near the bottom of the leaf. When you have watched, press Next.',m:1},
+ {p:'{P2}: The leaf and stomata',sc:'leaf',t:'Tap the tubes in the middle (xylem and phloem) to read about them.',w:'Find the circle in the middle of the leaf. Tap it.',d:function(){return has('info_vein')},tg:'[data-info="vein"]'},
+ {p:'{P2}: The leaf and stomata',sc:'leaf',t:'Tap the stomata to zoom in. They are the blinking boxes at the bottom.',w:'Tap one of the two blinking boxes under the leaf.',d:function(){return has('visit_pore')},tg:'[data-go="pore"]'},
+ {p:'{P2}: The leaf and stomata',sc:'pore',t:'Press \u201CClose the pore.\u201D Watch what happens to the arrows.',w:'The button is under the picture.',d:function(){return has('pore_closed')},tg:'#poreBtn'},
+ {p:'{P2}: The leaf and stomata',sc:'pore',t:'Press the button again to open the pore. Watch the arrows start again.',w:'The same button now says \u201COpen the pore.\u201D',d:function(){return has('pore_reopened')},tg:'#poreBtn'},
+ {p:'{P2}: The leaf and stomata',sc:'pore',t:'Press Back to return to the leaf.',w:'The Back button is at the top left.',d:function(){return has('left_pore')},tg:'#backBtn'}
+];
+var CSN=[
+ 'Press \u201CNext step\u201D on the right to see Step 1. Read it.',
+ 'Press \u201CNext step\u201D again to see Step 2. Read it.',
+ 'Press \u201CNext step\u201D again to see Step 3. Read it.',
+ 'Press \u201CNext step\u201D again to see Step 4. Read it.',
+ 'Press \u201CNext step\u201D again to see Step 5. Read it.'
+];
+var Z3=[
+ {p:'{P3}: The cell and chloroplast',sc:'leaf',t:'Tap a green cell to zoom in.',w:'It is the blinking box in the middle. Tap anywhere on the row of tall green cells.',d:function(){return has('visit_cell')},tg:'[data-go="cell"]'},
+ {p:'{P3}: The cell and chloroplast',sc:'cell',t:'The green ovals are chloroplasts. Tap a chloroplast to zoom in.',w:'Tap one of the green ovals. The blinking one is easiest.',d:function(){return has('visit_chloro')},tg:'[data-go="chloro"]'}
+].concat(CSN.map(function(t,i){
+  return {p:'{P3}: The cell and chloroplast',sc:'chloro',t:t,w:'The Next step button is in the card on the right.',d:function(){return has('cs'+(i+1))},tg:'#nextStep'};
+}),[
+ {p:'{P3}: The cell and chloroplast',sc:'chloro',t:'Press \u201CAll\u201D in the step list to see everything at once.',w:'The \u201CAll\u201D button is the first button in the step list.',d:function(){return has('chloro_all')},tg:'#steps .btn[data-s="0"]'},
+ {p:'{P3}: The cell and chloroplast',sc:'chloro',t:'Look at the picture. Find the thylakoid, the stroma, LIGHT-DEPENDENT, and LIGHT-INDEPENDENT.',w:'When you have found all four, press Next.',m:1}
+]);
+var Z4=[
+ {p:'{P4}: Put it together',sc:null,t:'Zoom out! Press Back three times to get to the whole plant.',w:'The Back button is at the top left.',d:function(){return curScreen()==='plant'},tg:'#backBtn'}
+].concat(flowStepsP4());
+var PARTP=['{P1}: The whole plant','{P2}: The leaf and stomata','{P3}: The cell and chloroplast','{P4}: Put it together'];
+var PARTSC=['plant','leaf','chloro','plant'];
+function qBlock(n){
+  var d=QDATA[n-1],out=[],p=PARTP[n-1],sc=PARTSC[n-1],i;
+  var qFirst=0;for(i=0;i<n-1;i++)qFirst+=QDATA[i].qs.length;
+  if(d.labels.length){
+    out.push({p:p,sc:sc,m:1,nl:'Start the label check \u2192',t:'Now label your diagram. Write one word on each lettered line (Line A, Line B, and so on). When you are ready, press the button. I will check them one at a time.',w:'Use the picture on the next screen to help you.'});
+    d.labels.forEach(function(l,j){out.push({p:p,sc:sc,q:1,lbl:1,ln:j+1,lN:d.labels.length,t:l.t,o:l.o,a:l.a,ans:l.ans,letter:l.letter,h:l.h,img:d.img,tg:'#qLiveHost .stage',tip:'Explore here!'})});
+  }
+  var from=qFirst+1,to=qFirst+d.qs.length;
+  out.push({p:p,sc:sc,m:1,nl:'Start the questions \u2192',t:'Now answer questions '+from+' to '+to+'. Answer here first. When you get one right, circle the same letter on your worksheet.',w:'You must get each question right to move on. If you need help, press Help.'});
+  d.qs.forEach(function(q,j){out.push({p:p,sc:sc,q:1,qn:qFirst+j+1,t:q.t,o:q.o,a:q.a,h:q.h,img:d.img,tg:'#qLiveHost .stage',tip:'Explore here!',zm:/CLOSED/.test(q.t)?'[data-go="pore"]':null})});
+  return out;
+}
+var FINAL={p:'All done!',sc:null,final:1,tf:function(){return 'Great work! You finished all 4 {Ws}. You got '+stats.first+' of '+stats.total+' questions right on the first try. Bonus: visit the roots or the stem. These side trips are not on your worksheet.'}};
+var STEPS=[].concat(Z1,qBlock(1),Z2,qBlock(2),Z3,qBlock(3),Z4,qBlock(4),[FINAL]);
+var P4IDX=0,P2LENS=0;
+(function(){
+  var cnt={};
+  STEPS.forEach(function(st,i){st.i=i;cnt[st.p]=(cnt[st.p]||0)+1;st.k=cnt[st.p];if(st.q)stats.total++;if(st.id==='lens')LENS_IDX=i;if(st.id==='p4flows')P4IDX=i;if(st.id==='p2lens')P2LENS=i});
+  STEPS.forEach(function(st){st.K=cnt[st.p]});
+})();
+function inPart4(){return stepIdx>=P4IDX}
+function stepDone(st){if(st.q)return has('qd'+st.i);return st.m?false:(st.d?st.d():false)}
+var gSpoken='';
+var LETTERS=['A','B','C','D'];
+function renderQuestion(){
+  var st=STEPS[stepIdx];if(!st||!st.q)return;
+  var S=prog['qs'+stepIdx]||(prog['qs'+stepIdx]={tries:0,wrong:[]});
+  var ok=has('qd'+stepIdx);
+  $('#qPanels').classList.toggle('noimg',!st.img);
+  $('#qImg').hidden=!st.img;
+  if(st.img){$('#qImg').innerHTML=DIAG[st.img]+'<div class="qCap">Your worksheet diagram'+(st.lbl?' (the orange line is Line '+st.letter+')':'')+'</div>';if(st.lbl&&st.letter){var hl=$('#qImg').querySelector('.bl[data-l="'+st.letter+'"]');if(hl)hl.classList.add('hi')}}
+  $('#qTag').textContent=fill(st.p)+'  \u2022  '+(st.lbl?'Label check '+st.ln+' of '+st.lN:'Question '+st.qn+' of 23');
+  $('#qText').textContent=st.t;
+  var box=$('#qOpts');box.innerHTML='';
+  st.o.forEach(function(o,i){
+    var b=document.createElement('button');b.type='button';b.className='btn qOpt';
+    var mark='';
+    if(ok&&i===st.a){b.classList.add('right');mark='  \u2714'}
+    else if(S.wrong.indexOf(i)>=0){b.classList.add('wrong');mark='  \u2716'}
+    b.innerHTML='<span class="ql">'+LETTERS[i]+'</span><span>'+o+mark+'</span>';
+    if(ok||S.wrong.indexOf(i)>=0)b.disabled=true;
+    b.addEventListener('click',function(){answerQ(i)});
+    box.appendChild(b);
+  });
+  var f=$('#qFeed');
+  if(ok)f.innerHTML='<span class="good">\u2714 Correct! Great job.</span> '+(st.lbl?'Write \u201C'+st.ans+'\u201D on Line '+st.letter+' of your worksheet.':'Circle '+LETTERS[st.a]+' on your worksheet.')+' Then press Next.';
+  else if(S.tries>=1)f.innerHTML='<span class="bad">\u2716 Not quite. Try another answer.</span>'+(S.tries>=2?'<br>Hint: '+st.h:'');
+  else f.textContent='';
+}
+function answerQ(i){
+  var st=STEPS[stepIdx];if(!st||!st.q||has('qd'+stepIdx))return;
+  var S=prog['qs'+stepIdx]||(prog['qs'+stepIdx]={tries:0,wrong:[]});
+  if(i===st.a){if(S.tries===0)stats.first++;done0('qd'+stepIdx)}
+  else{S.tries++;S.wrong.push(i)}
+  renderQuestion();refreshGuide();
+}
+var stageHome=null,sideHome=null;
+function dockStage(toQ){
+  var stage=$('#stage'),bar=$('#stageBar'),side=$('#side'),host=$('#qLiveHost'),sh=$('#qSideHost');
+  if(toQ){
+    if(stage.parentNode!==host){stageHome=stage.parentNode;sideHome=side.parentNode;host.appendChild(stage);host.appendChild(bar);sh.appendChild(side)}
+  }else if(stageHome&&stage.parentNode!==stageHome){
+    stageHome.appendChild(stage);stageHome.appendChild(bar);sideHome.appendChild(side);
+  }
+}
+function updateQNav(){var b=$('#qBackBtn');if(b)b.disabled=stack.length<=1}
+var modeQ=false;
+function zoomOK(el){var st=STEPS[stepIdx];if(!st||!st.zm)return false;return st.zm===true||el.matches(st.zm)}
+function applyQZoom(){
+  var st=STEPS[stepIdx];
+  document.body.classList.toggle('qMode',!!(modeQ&&st&&st.q));
+  if(!modeQ||!st||!st.q)return;
+  var any=!!st.zm;
+  var lens=$('#lens');if(lens)lens.style.display=any?'':'none';
+  var bar=$('#stageBar');if(bar)bar.style.display=(any&&(curScreen()==='pore'))?'':'none';
+  var nav=document.querySelector('.qNav');if(nav)nav.style.display=any?'':'none';
+  document.querySelectorAll('#qLiveHost [data-go]').forEach(function(e){var ok=zoomOK(e);e.classList.toggle('nozoom',!ok);e.setAttribute('tabindex',ok?'0':'-1')});
+  var cap=$('#qLiveCap');if(cap)cap.textContent=any?'Explore it! Tap the stomata to zoom in and watch the pore.':'Look at the moving picture. Tap a part to read about it.';
+}
+function showAllMoving(){
+  var svg=$('#svg');if(!svg)return;
+  eng.hidden=new Set();applyVis(svg);
+  svg.querySelectorAll('.zone').forEach(function(z){z.classList.add('on')});
+  var reduced=false;try{reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches}catch(_){}
+  if(eng.paused&&!reduced){eng.paused=false;document.body.classList.remove('paused');$('#pauseBtn').textContent='Pause motion'}
+}
+function applyMode(){
+  var st=STEPS[stepIdx],q=!!st.q,wasQ=modeQ;
+  modeQ=q;
+  dockStage(q);
+  if(q)showAllMoving();
+  else if(wasQ&&(curScreen()==='plant'||curScreen()==='chloro'))render(curScreen(),'');
+  $('#qScreen').hidden=!q;
+  $('#layout').hidden=q||!adv;$('#titleRow').hidden=q||!adv;
+  $('#backBtn').style.visibility=q?'hidden':'';$('#crumbs').style.visibility=q?'hidden':'';
+  if(q)renderQuestion();
+  applyQZoom();
+  window.scrollTo(0,0);
+}
+function refreshGuide(){
+  var g=$('#guide');if(!adv||!g||g.hidden)return;
+  if(lensApply)lensApply();
+  var st=STEPS[stepIdx],dn=stepDone(st);
+  $('#gTag').textContent=fill(st.p)+'  \u2022  Step '+st.k+' of '+st.K;
+  var txt;
+  if(st.q){
+    txt=dn?'\u2714 Correct! Press Next.':(st.lbl?'Check your label. Not sure? Look at the picture, tap a part to read about it, or press Help.':'Choose the best answer. Not sure? '+(st.zm?'Tap the stomata to zoom in, or press Help.':'Look at the picture, tap a part to read about it, or press Help.')+' You must get it right to move on.');
+    gSpoken=st.t+' '+st.o.map(function(o,i){return LETTERS[i]+'. '+o}).join('. ');
+  }else{
+    var base=fill(st.tf?st.tf():st.t);
+    txt=(dn?'\u2714 ':'')+base+(dn?'  Great! Press Next.':'');
+    gSpoken=base+(st.w?' '+fill(st.w):'');
+  }
+  $('#gText').textContent=txt;
+  var h=$('#gHint');if(!h.dataset.keep)h.hidden=true;
+  $('#gPrev').disabled=stepIdx===0;
+  var nx=$('#gNext');
+  nx.hidden=!!st.final;$('#gFinal').hidden=!st.final;$('#gSkip').hidden=true;
+  nx.disabled=!(st.m||dn);
+  nx.innerHTML=fill(st.nl||'Next step \u2192').replace('\u2192','&rarr;');
+  var wrong=!st.q&&st.sc&&curScreen()!==st.sc&&!dn;
+  $('#gWarn').hidden=!wrong;
+  if(wrong)$('#gWarnTxt').textContent='This step is on the \u201C'+SCREENS[st.sc].crumb+'\u201D screen.';
+  applyLock();
+  if(typeof applyQZoom==='function')applyQZoom();
+}
+function gotoScreen(id){stack=PATHS[id].slice();render(id,'in')}
+function syncScreen(){
+  var st=STEPS[stepIdx];$('#gHint').hidden=true;delete $('#gHint').dataset.keep;
+  if(st.q){if(curScreen()!==st.sc)gotoScreen(st.sc);applyMode();refreshGuide()}
+  else{applyMode();if(st.sc&&curScreen()!==st.sc)gotoScreen(st.sc);else refreshGuide()}
+}
+function nextStep(){clearSpot();if(stepIdx<STEPS.length-1){stepIdx++;syncScreen()}}
+function prevStep(){clearSpot();if(stepIdx>0){stepIdx--;syncScreen()}}
+var spotInt=0,spotTimer=0;
+function clearSpot(){document.querySelectorAll('.spotRing,.spotTip').forEach(function(e){e.remove()});clearInterval(spotInt);clearTimeout(spotTimer)}
+function spotlight(){
+  var st=STEPS[stepIdx];if(!st.tg)return false;
+  var sel=typeof st.tg==='function'?st.tg():st.tg;
+  var els=document.querySelectorAll(sel);if(!els.length)return false;
+  clearSpot();
+  try{els[0].scrollIntoView({block:'center',behavior:'smooth'})}catch(_){}
+  function draw(){
+    document.querySelectorAll('.spotRing,.spotTip').forEach(function(e){e.remove()});
+    els.forEach(function(el,i){
+      var r=el.getBoundingClientRect();if(r.width===0&&r.height===0)return;
+      var ring=document.createElement('div');ring.className='spotRing';
+      ring.style.left=(r.left+window.scrollX-8)+'px';ring.style.top=(r.top+window.scrollY-8)+'px';
+      ring.style.width=(r.width+16)+'px';ring.style.height=(r.height+16)+'px';
+      document.body.appendChild(ring);
+      if(i===0){
+        var tip=document.createElement('div');tip.className='spotTip';tip.textContent=st.tip||'Tap here!';
+        var above=r.top>90;
+        tip.style.left=(r.left+window.scrollX+r.width/2)+'px';
+        tip.style.top=(above?r.top+window.scrollY-56:r.bottom+window.scrollY+16)+'px';
+        document.body.appendChild(tip);
+      }
+    });
+  }
+  draw();spotInt=setInterval(draw,250);spotTimer=setTimeout(clearSpot,12000);
+  return true;
+}
+
+
+/* ---------- Step lock: only the current step's part works ---------- */
+function lockOn(){var st=STEPS[stepIdx];return !!(adv&&st&&!st.q&&!st.final&&$('#guide')&&!$('#guide').hidden)}
+function allowSel(){var st=STEPS[stepIdx];if(!st||!st.tg)return '';return typeof st.tg==='function'?st.tg():st.tg}
+function applyLock(){
+  var on=lockOn(),sel='',st=STEPS[stepIdx];
+  document.body.classList.toggle('lockUI',on);
+  document.querySelectorAll('.allow').forEach(function(e){e.classList.remove('allow')});
+  if(on){sel=allowSel();if(sel){try{document.querySelectorAll(sel).forEach(function(e){e.classList.add('allow')})}catch(_){}}}
+  document.body.classList.toggle('showPulse',on&&/data-go/.test(sel));
+  // controls cards (flow list, chloroplast steps): show only if they hold the allowed button
+  document.querySelectorAll('#side .card:not(.story):not(#infoCard)').forEach(function(c){
+    c.style.display=(on&&!c.querySelector('.allow'))?'none':'';
+    c.querySelectorAll('.grp').forEach(function(g){g.style.display=(on&&!g.querySelector('.allow'))?'none':''});
+    c.querySelectorAll('h2').forEach(function(h){h.style.display=on?'none':''});
+  });
+  // picture parts: only the allowed part can be reached by keyboard
+  document.querySelectorAll('svg .hot,#lens').forEach(function(e){e.setAttribute('tabindex',(!on||e.classList.contains('allow'))?'0':'-1')});
+  // under-picture bar: only when it holds the allowed button or the lens message is needed
+  var bar=$('#stageBar');
+  if(bar){
+    if(curScreen()==='plant'&&!lensAllowedNow())bar.style.display='none';
+    else if(on)bar.style.display=(bar.querySelector('.allow')||/#lens/.test(sel))?'':'none';
+    else bar.style.display='';
+  }
+  var gl=$('#gLock');
+  if(gl){
+    if(!on||stepDone(st))gl.hidden=true;
+    else{gl.hidden=false;gl.textContent=st.m?'Read this step. Then press Next.':'Only the part in this step is available right now. Do this step to go on.'}
+  }
+}
+var nudgeT=0;
+function nudge(){
+  var g=$('#guide');g.classList.remove('nudge');void g.offsetWidth;g.classList.add('nudge');
+  var h=$('#gHint');if(!h.dataset.keep){h.textContent='That part is not available yet. Do the step in this bar first.';h.hidden=false;clearTimeout(nudgeT);nudgeT=setTimeout(function(){if(!h.dataset.keep)h.hidden=true},2500)}
+}
+function guardEv(e){
+  if(modeQ&&e.target&&e.target.closest){
+    var z=e.target.closest('#qLiveHost [data-go]');
+    if(z&&!zoomOK(z)){e.stopPropagation();e.preventDefault();return}
+    var zb=e.target.closest('#qLiveHost #zoomBtn,#qLiveHost #lens');
+    if(zb&&!(STEPS[stepIdx]&&STEPS[stepIdx].zm)){e.stopPropagation();e.preventDefault();return}
+  }
+  if(!lockOn())return;
+  var t=e.target;if(!t||!t.closest)return;
+  if(t.closest('.guide,.tools,dialog,#defBox,#startScreen'))return;
+  if(!t.closest('#stage,#side,#stageBar,#crumbs,#backBtn,#titleRow'))return;
+  if(e.type==='keydown'&&e.key!=='Enter'&&e.key!==' '&&e.key.indexOf('Arrow')!==0)return;
+  var sel=allowSel();
+  if(sel){try{if(t.closest(sel))return}catch(_){}}
+  e.stopPropagation();e.preventDefault();nudge();
+}
+function initLock(){
+  ['click','pointerdown','mousedown','keydown'].forEach(function(n){document.addEventListener(n,guardEv,true)});
+  document.addEventListener('touchstart',guardEv,{capture:true,passive:false});
+}
+
+function wireGuide(){
+  initLock();
+  $('#gNext').addEventListener('click',nextStep);
+  $('#gPrev').addEventListener('click',prevStep);
+  $('#gSkip').addEventListener('click',nextStep);
+  $('#gTake').addEventListener('click',function(){var st=STEPS[stepIdx];if(st.sc)gotoScreen(st.sc)});
+  $('#gRead').addEventListener('click',function(){speak(gSpoken)});
+  $('#gHelp').addEventListener('click',function(e){
+    e.stopPropagation();
+    var st=STEPS[stepIdx],h=$('#gHint');
+    if(st.q){
+      h.innerHTML='<b>Not sure? Here is how to find the answer:</b><ol><li>Look at the moving picture. Tap a part to read about it.</li>'+(st.zm?'<li>Tap the stomata to zoom in. Press the pore button to close and open it. Press \u201CZoom back out\u201D to go back.</li><li>Press \u201CBack to this picture\u201D to start over.</li>':'')+'</ol><b>Hint for this question:</b> '+st.h;
+      h.hidden=false;h.dataset.keep='1';spotlight();return;
+    }
+    if(st.w){h.textContent=fill(st.w);h.hidden=false;h.dataset.keep='1'}
+    if(st.sc&&curScreen()!==st.sc&&!stepDone(st)){gotoScreen(st.sc);setTimeout(spotlight,350)}
+    else spotlight();
+  });
+  $('#qBackBtn').addEventListener('click',function(){back()});
+  $('#qReset').addEventListener('click',function(){var st=STEPS[stepIdx];if(st&&st.q){gotoScreen(st.sc);showAllMoving()}});
+  $('#gRoots').addEventListener('click',function(){gotoScreen('root')});
+  $('#gStem').addEventListener('click',function(){gotoScreen('stem')});
+  $('#gAgain').addEventListener('click',function(){showStart()});
+  document.addEventListener('click',function(e){if(!(e.target.closest&&e.target.closest('#gHelp')))clearSpot()});
+}
+
+/* ---------- Navigation ---------- */
+var stack=['plant'];
+function goTo(id){done0('visit_'+id);stack.push(id);render(id,'in')}
+function back(){if(stack.length>1){done0('left_'+stack[stack.length-1]);stack.pop();render(stack[stack.length-1],'out')}else{showStart()}}
+function jump(i){stack=stack.slice(0,i+1);render(stack[stack.length-1],'out')}
+
+function render(id,dir){
+  var S=SCREENS[id];
+  stopSpeech();clearFlows();eng.hidden=new Set();$('#defBox').hidden=true;
+  var stage=$('#stage');
+  stage.innerHTML='<svg id="svg" viewBox="0 0 640 600" role="img" aria-label="'+S.alt+'" xmlns="'+NS+'">'+S.draw()+'</svg>';
+  stage.classList.remove('zin','zout');void stage.offsetWidth;
+  if(dir==='in')stage.classList.add('zin');else if(dir==='out')stage.classList.add('zout');
+  $('#title').textContent=adv?THEMES[adv].titles[id]:S.title;$('#lvl').textContent=adv?S.lvl.replace('Zoom level',THEMES[adv].word):S.lvl;$('#scale').textContent='Size: '+S.scale;
+  $('#backBtn').hidden=false;$('#backBtn').innerHTML=stack.length<=1?'&larr; Choose adventure':'&larr; Back';
+  var cr=$('#crumbs');cr.innerHTML='';
+  stack.forEach(function(sid,i){
+    if(i>0){var sp=document.createElement('span');sp.className='sep';sp.textContent='›';cr.appendChild(sp)}
+    if(i===stack.length-1){var h=document.createElement('span');h.className='here';h.textContent=SCREENS[sid].crumb;h.setAttribute('aria-current','page');cr.appendChild(h)}
+    else{var b=document.createElement('button');b.type='button';b.textContent=SCREENS[sid].crumb;b.addEventListener('click',function(){jump(i)});cr.appendChild(b)}
+  });
+  $('#stageBar').innerHTML=S.bar?S.bar():'';
+  clearSpot();
+  $('#side').innerHTML=missionCard(id)+(S.top?S.top():'')+
+   '<div class="card" id="infoCard" aria-live="polite"><h2 id="infoTitle"></h2><div id="infoBody"></div><div class="row"><button class="btn" id="readBtn" type="button">Read aloud</button></div></div>';
+  if(S.intro)showInfo(S.intro);
+  var svg=$('#svg');
+  svg.querySelectorAll('.hot').forEach(function(el){
+    el.setAttribute('tabindex','0');el.setAttribute('role','button');
+    if(el.dataset.label)el.setAttribute('aria-label',el.dataset.label);
+    var act=function(){if(el.dataset.go)goTo(el.dataset.go);else if(el.dataset.info){showInfo(el.dataset.info);done('info_'+el.dataset.info)}};
+    el.addEventListener('click',act);
+    el.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();act()}});
+  });
+  $('#readBtn').addEventListener('click',function(){speak($('#infoTitle').textContent+'. '+$('#infoBody').innerText,this)});
+  lensApply=null;
+  S.setup(svg);
+  refreshGuide();
+  if(typeof updateQNav==='function')updateQNav();
+  if(typeof applyQZoom==='function')applyQZoom();
+  window.scrollTo(0,0);
+}
+
+/* ---------- Header controls & options ---------- */
+$('#backBtn').addEventListener('click',back);
+$('#pauseBtn').addEventListener('click',function(){
+  eng.paused=!eng.paused;document.body.classList.toggle('paused',eng.paused);
+  this.textContent=eng.paused?'Play motion':'Pause motion';
+});
+$('#speed').addEventListener('input',function(){eng.speed=+this.value});
+var opts={dys:false,size:100,tint:'none'};
+try{var saved=JSON.parse(localStorage.getItem('photoLabOpts')||'null');if(saved)opts=Object.assign(opts,saved)}catch(_){}
+function applyOpts(){
+  var r=document.documentElement;
+  r.dataset.dys=opts.dys?'1':'0';r.style.fontSize=opts.size+'%';
+  if(opts.tint==='none')r.removeAttribute('data-tint');else r.dataset.tint=opts.tint;
+  $('#optDys').checked=opts.dys;$('#optTint').value=opts.tint;
+  try{localStorage.setItem('photoLabOpts',JSON.stringify(opts))}catch(_){}
+}
+$('#optBtn').addEventListener('click',function(){$('#optDlg').showModal()});
+$('#optX').addEventListener('click',function(){$('#optDlg').close()});
+$('#optDys').addEventListener('change',function(){opts.dys=this.checked;applyOpts()});
+$('#optSm').addEventListener('click',function(){opts.size=clamp(opts.size-10,80,150);applyOpts()});
+$('#optLg').addEventListener('click',function(){opts.size=clamp(opts.size+10,80,150);applyOpts()});
+$('#optTint').addEventListener('change',function(){opts.tint=this.value;applyOpts()});
+
+try{if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){eng.paused=true;document.body.classList.add('paused');$('#pauseBtn').textContent='Play motion'}}catch(_){}
+applyOpts();
+wireGuide();
+$('#goBus').addEventListener('click',function(){startAdv('bus')});
+$('#goQuest').addEventListener('click',function(){startAdv('quest')});
+showStart();
+eng.raf=requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
